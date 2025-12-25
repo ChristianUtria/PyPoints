@@ -1,68 +1,67 @@
 # PyPoints README
 
-PyPoints es una extensión de Visual Studio Code que te permite **analizar y visualizar todos tus endpoints de Flask y FastAPI** en tus proyectos Python.  
-Con PyPoints podrás ver de manera clara el **nombre, método, número de líneas y código de cada endpoint**, agrupados por categorías usando comentarios `# nombre`.  
-Su interfaz estilo Postman facilita navegar y revisar tus APIs directamente desde VS Code.
+PyPoints is a Visual Studio Code extension that allows you to **analyze and visualize all your Flask and FastAPI endpoints** in your Python projects.  
+With PyPoints, you can clearly see the **function name, HTTP method, number of lines, and full code of each endpoint**, grouped by categories using `# name` comments.  
+Its Postman-style interface makes it easy to navigate and review your APIs directly within VS Code.
 
 ## Features
 
-- Detecta endpoints de **Flask** y **FastAPI** automáticamente.  
-- Agrupa endpoints por categorías usando comentarios `# nombre`.  
-- Muestra detalles de cada endpoint:  
-  - Nombre de la función  
-  - Método HTTP (GET, POST, PUT, DELETE)  
-  - Líneas de código, línea inicial y final  
-  - Código completo del endpoint  
-- Interfaz dentro de VS Code con categorías colapsables y colores por método.  
-- Fácil de usar: solo abre un archivo Python con endpoints y ejecuta el comando `PyPoints: Analizar Endpoints`.
+- Automatically detects **Flask** and **FastAPI** endpoints.  
+- Groups endpoints by categories using `# name` comments.  
+- Shows detailed information for each endpoint:  
+  - Function name  
+  - HTTP method (GET, POST, PUT, DELETE)  
+  - Number of lines, start line, and end line  
+  - Full code of the endpoint  
+- VS Code interface with collapsible categories and color-coded methods.  
+- Easy to use: just open a Python file with endpoints and run the command `PyPoints: Analyze Endpoints`.
 
 ![PyPoints Example](images/pypoints-screenshot.png)  
 
-> aqui irrian las imagenes, si es que tuviera AJAJAJAJJAJ
+> This is where images would go if we had any 
 
 ## Requirements
 
 - VS Code ≥ 1.80  
-- Node.js ≥ 18 (para desarrollo de la extensión)  
-- Python ≥ 3.8 (para tus proyectos con Flask o FastAPI)  
+- Node.js ≥ 18 (for extension development)  
+- Python ≥ 3.8 (for your Flask or FastAPI projects)  
 
-No necesita dependencias adicionales en la máquina del usuario, solo tener VS Code y abrir proyectos Python.
+No additional dependencies are needed on the user’s machine, just have VS Code and open Python projects.
 
 ## Extension Settings
 
-Esta extensión no requiere configuraciones adicionales por ahora, pero planea futuras opciones para personalizar la interfaz y los colores de los métodos HTTP.
+This extension does not require additional settings for now, but future updates may allow customization of the interface and HTTP method colors.
 
 ## Known Issues
 
-- No detecta endpoints dinámicos construidos mediante variables en `@app.route`.  
-- Actualmente solo cuenta hasta el último `return` de la función; funciones muy complejas con múltiples retornos pueden requerir revisión manual.  
-- La interfaz Webview puede tener scroll limitado si hay muchos endpoints.
+- Does not detect dynamic endpoints created using variables in `@app.route`.  
+- Currently counts only up to the last `return` in the function; very complex functions with multiple returns may require manual review.  
+- The Webview interface may have limited scrolling if there are many endpoints.
 
 ## Release Notes
 
 ### 1.0.0
 
-- Primera versión de PyPoints.  
-- Detección de endpoints Flask y FastAPI.  
-- Interfaz Webview estilo Postman con categorías y detalles de endpoints.
+- First release of PyPoints.  
+- Detection of Flask and FastAPI endpoints.  
+- Postman-style Webview interface with categories and endpoint details.
 
 ### 1.1.0
 
-- Mejorada la detección de métodos HTTP y conteo de líneas reales.  
-- Colores por método y tarjetas colapsables para categorías.  
+- Improved detection of HTTP methods and accurate line counting.  
+- Color-coded methods and collapsible category cards.  
 
 ---
 
-## Following extension guidelines
+## Following Extension Guidelines
 
-Asegúrate de haber leído las **guidelines** para extensiones y sigue las mejores prácticas para mantener tu proyecto limpio y profesional.
+Make sure you have read the **extension guidelines** and follow best practices to keep your project clean and professional.
 
 * [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
 
-
-## For more information
+## For More Information
 
 * [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)  
 * [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
 
-**¡Disfruta usando PyPoints!**
+**Enjoy using PyPoints!**
