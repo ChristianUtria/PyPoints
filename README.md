@@ -1,71 +1,68 @@
-# contador-endpoints-python README
+# PyPoints README
 
-This is the README for your extension "contador-endpoints-python". After writing up a brief description, we recommend including the following sections.
+PyPoints es una extensión de Visual Studio Code que te permite **analizar y visualizar todos tus endpoints de Flask y FastAPI** en tus proyectos Python.  
+Con PyPoints podrás ver de manera clara el **nombre, método, número de líneas y código de cada endpoint**, agrupados por categorías usando comentarios `# nombre`.  
+Su interfaz estilo Postman facilita navegar y revisar tus APIs directamente desde VS Code.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- Detecta endpoints de **Flask** y **FastAPI** automáticamente.  
+- Agrupa endpoints por categorías usando comentarios `# nombre`.  
+- Muestra detalles de cada endpoint:  
+  - Nombre de la función  
+  - Método HTTP (GET, POST, PUT, DELETE)  
+  - Líneas de código, línea inicial y final  
+  - Código completo del endpoint  
+- Interfaz dentro de VS Code con categorías colapsables y colores por método.  
+- Fácil de usar: solo abre un archivo Python con endpoints y ejecuta el comando `PyPoints: Analizar Endpoints`.
 
-For example if there is an image subfolder under your extension project workspace:
+![PyPoints Example](images/pypoints-screenshot.png)  
 
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+> aqui irrian las imagenes, si es que tuviera AJAJAJAJJAJ
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- VS Code ≥ 1.80  
+- Node.js ≥ 18 (para desarrollo de la extensión)  
+- Python ≥ 3.8 (para tus proyectos con Flask o FastAPI)  
+
+No necesita dependencias adicionales en la máquina del usuario, solo tener VS Code y abrir proyectos Python.
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+Esta extensión no requiere configuraciones adicionales por ahora, pero planea futuras opciones para personalizar la interfaz y los colores de los métodos HTTP.
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+- No detecta endpoints dinámicos construidos mediante variables en `@app.route`.  
+- Actualmente solo cuenta hasta el último `return` de la función; funciones muy complejas con múltiples retornos pueden requerir revisión manual.  
+- La interfaz Webview puede tener scroll limitado si hay muchos endpoints.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
 ### 1.0.0
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
+- Primera versión de PyPoints.  
+- Detección de endpoints Flask y FastAPI.  
+- Interfaz Webview estilo Postman con categorías y detalles de endpoints.
 
 ### 1.1.0
 
-Added features X, Y, and Z.
+- Mejorada la detección de métodos HTTP y conteo de líneas reales.  
+- Colores por método y tarjetas colapsables para categorías.  
 
 ---
 
 ## Following extension guidelines
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+Asegúrate de haber leído las **guidelines** para extensiones y sigue las mejores prácticas para mantener tu proyecto limpio y profesional.
 
 * [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
 
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
 
 ## For more information
 
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
+* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)  
 * [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
 
-**Enjoy!**
+**¡Disfruta usando PyPoints!**
