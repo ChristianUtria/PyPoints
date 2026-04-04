@@ -1,40 +1,115 @@
 {
   "name": "contador-endpoints-python",
-  "displayName": "contador-endpoints-python",
-  "description": "Cuenta endpoints en archivos Python Flask y FastAPI",
+  "displayName": "Python Endpoint Counter",
+  "description": "Analiza proyectos Python y cuenta endpoints de Flask, FastAPI y Django",
   "version": "0.0.1",
+  "publisher": "christian-dev",
   "engines": {
-    "vscode": "^1.107.0"
+    "vscode": "^1.85.0"
   },
-  "categories": [
-    "Other"
+  "categories": ["Other"],
+  "icon": "media/icon.svg",
+  "activationEvents": [
+    "onView:endpointExplorer"
   ],
-  "activationEvents": [],
   "main": "./out/extension.js",
-"contributes": {
-    "commands": [
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ChristianUtria/PyPoints.git"
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
         {
-            "command": "contador-endpoints-python.contarEndpoints",
-            "title": "Contar Endpoints Python"
+          "id": "endpointCounter",
+          "title": "Endpoint Counter",
+          "icon": "media/icon.svg"
         }
-    ]
-},
+      ]
+    },
+    "views": {
+      "endpointCounter": [
+        {
+          "id": "endpointExplorer",
+          "name": "Endpoints",
+          "icon": "media/icon.svg",
+          "contextualTitle": "Python Endpoints"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "endpointCounter.refresh",
+        "title": "Actualizar Endpoints",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "endpointCounter.scanWorkspace",
+        "title": "Escanear Workspace",
+        "icon": "$(search)"
+      },
+      {
+        "command": "endpointCounter.goToLine",
+        "title": "Ir al Endpoint"
+      },
+      {
+        "command": "endpointCounter.copyRoute",
+        "title": "Copiar Ruta",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "endpointCounter.groupByCategory",
+        "title": "Agrupar por Categoría"
+      },
+      {
+        "command": "endpointCounter.groupByFile",
+        "title": "Agrupar por Archivo"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "endpointCounter.refresh",
+          "when": "view == endpointExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "endpointCounter.scanWorkspace",
+          "when": "view == endpointExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "endpointCounter.groupByCategory",
+          "when": "view == endpointExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "endpointCounter.groupByFile",
+          "when": "view == endpointExplorer",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "endpointCounter.copyRoute",
+          "when": "viewItem == endpoint",
+          "group": "inline"
+        }
+      ]
+    }
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src",
-    "test": "vscode-test"
+    "lint": "eslint src --ext ts"
   },
   "devDependencies": {
-    "@types/vscode": "^1.107.0",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "22.x",
-    "typescript-eslint": "^8.48.1",
-    "eslint": "^9.39.1",
-    "typescript": "^5.9.3",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^8.0.0"
   }
 }
