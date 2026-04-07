@@ -1,24 +1,27 @@
 {
   "name": "contador-endpoints-python",
-  "displayName": "Pypoinst: Python Endpoint Counter",
-  "description": "Analiza proyectos Python y cuenta endpoints de Flask, FastAPI y Django",
-  "version": "0.0.1",
+  "displayName": "PyPoints: Python Endpoint Counter",
+  "description": "Analiza proyectos Python y detecta endpoints de Flask, FastAPI y Django con validaciones avanzadas",
+  "version": "0.0.2",
   "publisher": "christian-dev",
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": [
-    "Other"
-  ],
+  "categories": ["Other"],
   "icon": "media/logotipo.png",
+
   "activationEvents": [
-    "onView:endpointExplorer"
+    "onView:endpointExplorer",
+    "onCommand:endpointCounter.refresh"
   ],
+
   "main": "./out/extension.js",
+
   "repository": {
     "type": "git",
     "url": "https://github.com/ChristianUtria/PyPoints.git"
   },
+
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -29,6 +32,7 @@
         }
       ]
     },
+
     "views": {
       "endpointCounter": [
         {
@@ -39,79 +43,118 @@
         }
       ]
     },
+
     "commands": [
-      {
-        "command": "endpointCounter.refresh",
-        "title": "Actualizar Endpoints",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "endpointCounter.scanWorkspace",
-        "title": "Escanear Workspace",
-        "icon": "$(search)"
-      },
-      {
-        "command": "endpointCounter.goToLine",
-        "title": "Ir al Endpoint"
-      },
-      {
-        "command": "endpointCounter.copyRoute",
-        "title": "Copiar Ruta",
-        "icon": "$(copy)"
-      },
-      {
-        "command": "endpointCounter.groupByCategory",
-        "title": "Agrupar por Categoría"
-      },
-      {
-        "command": "endpointCounter.groupByFile",
-        "title": "Agrupar por Archivo"
-      }
+      { "command": "endpointCounter.refresh",        "title": "Actualizar Endpoints",      "icon": "$(refresh)" },
+      { "command": "endpointCounter.scanWorkspace",  "title": "Escanear Workspace",        "icon": "$(sync)" },
+      { "command": "endpointCounter.copyRoute",      "title": "Copiar Ruta",               "icon": "$(copy)" },
+      { "command": "endpointCounter.copyCurl",       "title": "Copiar como cURL",          "icon": "$(terminal)" },
+      { "command": "endpointCounter.peekCode",       "title": "Ver Código (Preview)",      "icon": "$(open-preview)" },
+
+      { "command": "endpointCounter.search",         "title": "Buscar Endpoints",          "icon": "$(search)" },
+      { "command": "endpointCounter.filterByMethod", "title": "Filtrar por Método HTTP",   "icon": "$(filter)" },
+      { "command": "endpointCounter.showOnlyIssues", "title": "Mostrar Solo Problemas",    "icon": "$(error)" },
+      { "command": "endpointCounter.clearFilters",   "title": "Limpiar Filtros",           "icon": "$(clear-all)" },
+
+      { "command": "endpointCounter.exportJson",     "title": "Exportar JSON",             "icon": "$(export)" },
+      { "command": "endpointCounter.exportMarkdown", "title": "Exportar Markdown",         "icon": "$(markdown)" },
+
+      { "command": "endpointCounter.groupByCategory","title": "Agrupar por Categoría" },
+      { "command": "endpointCounter.groupByFile",    "title": "Agrupar por Archivo" }
     ],
+
     "menus": {
       "view/title": [
         {
           "command": "endpointCounter.refresh",
           "when": "view == endpointExplorer",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "endpointCounter.scanWorkspace",
           "when": "view == endpointExplorer",
-          "group": "navigation"
+          "group": "navigation@2"
+        },
+        {
+          "command": "endpointCounter.search",
+          "when": "view == endpointExplorer",
+          "group": "navigation@3"
+        },
+        {
+          "command": "endpointCounter.filterByMethod",
+          "when": "view == endpointExplorer",
+          "group": "navigation@4"
+        },
+        {
+          "command": "endpointCounter.showOnlyIssues",
+          "when": "view == endpointExplorer",
+          "group": "navigation@5"
+        },
+        {
+          "command": "endpointCounter.clearFilters",
+          "when": "view == endpointExplorer",
+          "group": "navigation@6"
         },
         {
           "command": "endpointCounter.groupByCategory",
           "when": "view == endpointExplorer",
-          "group": "navigation"
+          "group": "2_group@1"
         },
         {
           "command": "endpointCounter.groupByFile",
           "when": "view == endpointExplorer",
-          "group": "navigation"
+          "group": "2_group@2"
+        },
+        {
+          "command": "endpointCounter.exportJson",
+          "when": "view == endpointExplorer",
+          "group": "3_export@1"
+        },
+        {
+          "command": "endpointCounter.exportMarkdown",
+          "when": "view == endpointExplorer",
+          "group": "3_export@2"
         }
       ],
+
       "view/item/context": [
         {
+          "command": "endpointCounter.goToLine",
+          "when": "view == endpointExplorer && viewItem == endpoint",
+          "group": "navigation@1"
+        },
+        {
+          "command": "endpointCounter.peekCode",
+          "when": "view == endpointExplorer && viewItem == endpoint",
+          "group": "navigation@2"
+        },
+        {
           "command": "endpointCounter.copyRoute",
-          "when": "viewItem == endpoint",
-          "group": "inline"
+          "when": "view == endpointExplorer && viewItem == endpoint",
+          "group": "inline@1"
+        },
+        {
+          "command": "endpointCounter.copyCurl",
+          "when": "view == endpointExplorer && viewItem == endpoint",
+          "group": "inline@2"
         }
       ]
     }
   },
+
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts"
   },
+
   "devDependencies": {
-    "@types/node": "^20.19.39",
     "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
-    "eslint": "^8.0.0",
-    "typescript": "^5.3.0"
+    "eslint": "^8.0.0"
   }
 }
