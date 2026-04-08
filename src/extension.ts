@@ -36,8 +36,8 @@ function calcComplexity(lineCount: number): 'simple' | 'medium' | 'complex' {
 }
 
 const COMPLEXITY_ICON: Record<string, string> = {
-  simple:  'Ⅰ',
-  medium:  'ⅠⅠ',
+  simple: 'Ⅰ',
+  medium: 'ⅠⅠ',
   complex: 'ⅠⅠⅠ',
 };
 
@@ -92,20 +92,47 @@ function validateEndpoint(ep: Endpoint, allEndpoints: Endpoint[]): ValidationIss
 }
 
 function detectDuplicates(endpoints: Endpoint[]): void {
-  const seen = new Map<string, Endpoint>();
+  // Pase 1: duplicados por METHOD:route (colisión de rutas)
+  const seenRoutes = new Map<string, Endpoint>();
   for (const ep of endpoints) {
     const key = `${ep.method.toUpperCase()}:${ep.route}`;
-    if (seen.has(key)) {
-      ep.isDuplicate = true;
-      ep.duplicateOf = `${seen.get(key)!.functionName} (${seen.get(key)!.fileName})`;
-      // also mark the original
-      const orig = seen.get(key)!;
+    if (seenRoutes.has(key)) {
+      const orig = seenRoutes.get(key)!;
+      const label = `${orig.functionName} (${orig.fileName})`;
+      ep.isDuplicate   = true;
+      ep.duplicateOf   = (ep.duplicateOf ? ep.duplicateOf + ', ' : '') + `ruta duplicada → ${label}`;
       if (!orig.isDuplicate) {
         orig.isDuplicate = true;
-        orig.duplicateOf = `${ep.functionName} (${ep.fileName})`;
+        orig.duplicateOf = `ruta duplicada → ${ep.functionName} (${ep.fileName})`;
+      } else {
+        orig.duplicateOf += `, ${ep.functionName} (${ep.fileName})`;
       }
     } else {
-      seen.set(key, ep);
+      seenRoutes.set(key, ep);
+    }
+  }
+
+  // Pase 2: duplicados por nombre de función (mismo nombre en cualquier archivo)
+  const seenNames = new Map<string, Endpoint>();
+  for (const ep of endpoints) {
+    const key = ep.functionName.toLowerCase();
+    if (seenNames.has(key)) {
+      const orig = seenNames.get(key)!;
+      // Solo marcar si son archivos distintos o líneas distintas
+      if (orig.filePath !== ep.filePath || orig.lineStart !== ep.lineStart) {
+        const label = `${orig.functionName} (${orig.fileName})`;
+        ep.isDuplicate = true;
+        ep.duplicateOf = (ep.duplicateOf ? ep.duplicateOf + ', ' : '') + `nombre duplicado → ${label}`;
+        if (!orig.isDuplicate) {
+          orig.isDuplicate = true;
+          orig.duplicateOf = (orig.duplicateOf ? orig.duplicateOf + ', ' : '') +
+            `nombre duplicado → ${ep.functionName} (${ep.fileName})`;
+        } else {
+          orig.duplicateOf += `, nombre dup. → ${ep.functionName} (${ep.fileName})`;
+        }
+      }
+    } else {
+      seenNames.set(key, ep);
     }
   }
 }
@@ -128,15 +155,15 @@ class EndpointItem extends vscode.TreeItem {
       this.contextValue = 'endpoint';
 
       const complexityBadge = endpoint.complexity ? COMPLEXITY_ICON[endpoint.complexity] : '';
-      const hasErrors   = endpoint.issues?.some(i => i.type === 'error');
+      const hasErrors = endpoint.issues?.some(i => i.type === 'error');
       const hasWarnings = endpoint.issues?.some(i => i.type === 'warning');
-      const isDupe      = endpoint.isDuplicate;
+      const isDupe = endpoint.isDuplicate;
 
       // Status indicators in description
       let statusIcons = '';
-      if (hasErrors)   statusIcons += ' $(error)';
+      if (hasErrors) statusIcons += ' $(error)';
       if (hasWarnings && !hasErrors) statusIcons += ' $(warning)';
-      if (isDupe)      statusIcons += ' $(copy)';
+      if (isDupe) statusIcons += ' $(copy)';
 
       this.description = `${endpoint.method}  •  L${endpoint.lineStart}  ${complexityBadge}${statusIcons}`;
 
@@ -208,12 +235,12 @@ function buildCodePreview(source: string | undefined, maxLines: number): string 
 
 function getMethodIcon(method: string): string {
   const icons: Record<string, string> = {
-    'GET':     'arrow-down',
-    'POST':    'arrow-up',
-    'PUT':     'pencil',
-    'PATCH':   'diff-modified',
-    'DELETE':  'trash',
-    'HEAD':    'eye',
+    'GET': 'arrow-down',
+    'POST': 'arrow-up',
+    'PUT': 'pencil',
+    'PATCH': 'diff-modified',
+    'DELETE': 'trash',
+    'HEAD': 'eye',
     'OPTIONS': 'settings-gear',
   };
   return icons[method.toUpperCase()] ?? 'circle-outline';
@@ -221,12 +248,12 @@ function getMethodIcon(method: string): string {
 
 function getMethodColor(method: string): string {
   const colors: Record<string, string> = {
-    'GET':     'charts.green',
-    'POST':    'charts.blue',
-    'PUT':     'charts.yellow',
-    'PATCH':   'charts.orange',
-    'DELETE':  'charts.red',
-    'HEAD':    'charts.purple',
+    'GET': 'charts.green',
+    'POST': 'charts.blue',
+    'PUT': 'charts.yellow',
+    'PATCH': 'charts.orange',
+    'DELETE': 'charts.red',
+    'HEAD': 'charts.purple',
     'OPTIONS': 'foreground',
   };
   return colors[method.toUpperCase()] ?? 'foreground';
@@ -379,50 +406,76 @@ function findNextFunction(
 
 // ─── Decoraciones de editor ───────────────────────────────────────────────────
 
-const endpointDecorationType = vscode.window.createTextEditorDecorationType({
-  before: {
-    color: new vscode.ThemeColor('editorCodeLens.foreground'),
-    margin: '0 8px 0 0',
+const decorError = vscode.window.createTextEditorDecorationType({
+  after: {
+    color: new vscode.ThemeColor('errorForeground'),
     fontStyle: 'italic',
     fontWeight: 'normal',
+    margin: '0 0 0 16px',
   },
-  isWholeLine: false,
-  overviewRulerColor: new vscode.ThemeColor('charts.blue'),
+  overviewRulerColor: new vscode.ThemeColor('errorForeground'),
   overviewRulerLane: vscode.OverviewRulerLane.Right,
 });
 
-const endpointErrorDecorationType = vscode.window.createTextEditorDecorationType({
-  before: {
-    color: new vscode.ThemeColor('errorForeground'),
-    margin: '0 8px 0 0',
+const decorWarning = vscode.window.createTextEditorDecorationType({
+  after: {
+    color: new vscode.ThemeColor('editorWarning.foreground'),
     fontStyle: 'italic',
+    fontWeight: 'normal',
+    margin: '0 0 0 16px',
   },
-  isWholeLine: false,
-  overviewRulerColor: new vscode.ThemeColor('errorForeground'),
+  overviewRulerColor: new vscode.ThemeColor('editorWarning.foreground'),
   overviewRulerLane: vscode.OverviewRulerLane.Right,
 });
 
 function applyEditorDecorations(editor: vscode.TextEditor, endpoints: Endpoint[]): void {
   const fileEndpoints = endpoints.filter(ep => ep.filePath === editor.document.uri.fsPath);
 
-  const normalDecorations: vscode.DecorationOptions[] = [];
   const errorDecorations: vscode.DecorationOptions[] = [];
+  const warnDecorations:  vscode.DecorationOptions[] = [];
 
   for (const ep of fileEndpoints) {
-    const line = Math.max(0, ep.lineStart - 2);
-    const range = editor.document.lineAt(line).range;
-    const hasErrors = ep.issues?.some(i => i.type === 'error') || ep.isDuplicate;
+    // Línea del @route/@app.get (lineStart es 1-indexed, lineStart-2 = 0-indexed del decorator)
+    const decoratorLine = Math.max(0, ep.lineStart - 2);
+    const range = editor.document.lineAt(decoratorLine).range;
+
+    const hasErrors   = ep.issues?.some(i => i.type === 'error') || ep.isDuplicate;
+    const hasWarnings = ep.issues?.some(i => i.type === 'warning');
+
     if (hasErrors) {
-      errorDecorations.push({ range });
-    } else {
-      normalDecorations.push({ range });
+      const messages: string[] = [];
+      if (ep.isDuplicate) {
+        messages.push(`⊗ Duplicado de: ${ep.duplicateOf}`);
+      }
+      ep.issues
+        ?.filter(i => i.type === 'error')
+        .forEach(i => messages.push(`⊗ ${i.message}`));
+
+      errorDecorations.push({
+        range,
+        renderOptions: {
+          after: { contentText: '   ' + messages.join('   ') },
+        },
+      });
+
+    } else if (hasWarnings) {
+      const messages = ep.issues!
+        .filter(i => i.type === 'warning')
+        .map(i => `⚠ ${i.message}`);
+
+      warnDecorations.push({
+        range,
+        renderOptions: {
+          after: { contentText: '   ' + messages.join('   ') },
+        },
+      });
     }
+    // Sin problemas → sin decoración
   }
 
-  editor.setDecorations(endpointDecorationType, normalDecorations);
-  editor.setDecorations(endpointErrorDecorationType, errorDecorations);
+  editor.setDecorations(decorError,   errorDecorations);
+  editor.setDecorations(decorWarning, warnDecorations);
 }
-
 // ─── Panel de preview ─────────────────────────────────────────────────────────
 
 function showEndpointPreviewPanel(ep: Endpoint, context: vscode.ExtensionContext): void {
@@ -444,7 +497,7 @@ function showEndpointPreviewPanel(ep: Endpoint, context: vscode.ExtensionContext
   };
   const badgeColor = methodBadgeColor[ep.method] ?? '#888';
 
-  const hasErrors   = ep.issues?.some(i => i.type === 'error') || ep.isDuplicate;
+  const hasErrors = ep.issues?.some(i => i.type === 'error') || ep.isDuplicate;
   const hasWarnings = ep.issues?.some(i => i.type === 'warning');
 
   let issuesHtml = '';
@@ -882,9 +935,9 @@ export class EndpointProvider implements vscode.TreeDataProvider<EndpointItem> {
     }
 
     // Notify about critical issues
-    const errorCount  = this.endpoints.filter(ep => ep.issues?.some(i => i.type === 'error')).length;
-    const dupeCount   = this.endpoints.filter(ep => ep.isDuplicate).length;
-    const warnCount   = this.endpoints.filter(ep => ep.issues?.some(i => i.type === 'warning')).length;
+    const errorCount = this.endpoints.filter(ep => ep.issues?.some(i => i.type === 'error')).length;
+    const dupeCount = this.endpoints.filter(ep => ep.isDuplicate).length;
+    const warnCount = this.endpoints.filter(ep => ep.issues?.some(i => i.type === 'warning')).length;
 
     const count = this.endpoints.length;
     let statusText = `$(symbol-method) ${count} endpoint${count !== 1 ? 's' : ''}`;
@@ -900,8 +953,8 @@ export class EndpointProvider implements vscode.TreeDataProvider<EndpointItem> {
     // Alert if there are errors or duplicates
     if (errorCount > 0 || dupeCount > 0) {
       const problemList = [
-        errorCount > 0  ? `${errorCount} error${errorCount !== 1 ? 'es' : ''}` : null,
-        dupeCount  > 0  ? `${dupeCount} duplicado${dupeCount !== 1 ? 's' : ''}` : null,
+        errorCount > 0 ? `${errorCount} error${errorCount !== 1 ? 'es' : ''}` : null,
+        dupeCount > 0 ? `${dupeCount} duplicado${dupeCount !== 1 ? 's' : ''}` : null,
       ].filter(Boolean).join(', ');
 
       const action = await vscode.window.showWarningMessage(
@@ -964,9 +1017,9 @@ export class EndpointProvider implements vscode.TreeDataProvider<EndpointItem> {
       byMethod[ep.method] = (byMethod[ep.method] ?? 0) + 1;
     }
     const filters = [
-      this.searchQuery    ? `🔍 "${this.searchQuery}"` : null,
-      this.filterMethod   ? `[${this.filterMethod}]`   : null,
-      this.showOnlyIssues ? '⚠ solo issues'            : null,
+      this.searchQuery ? `🔍︎​ "${this.searchQuery}"` : null,
+      this.filterMethod ? `[${this.filterMethod}]` : null,
+      this.showOnlyIssues ? '⚠ solo issues' : null,
     ].filter(Boolean);
 
     const methodStr = Object.entries(byMethod).map(([m, c]) => `${m}:${c}`).join('  ');
@@ -1165,7 +1218,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // ── Agrupación ───────────────────────────────────────────────────────────
     vscode.commands.registerCommand('endpointCounter.groupByCategory', () => provider.setGroupBy('category')),
-    vscode.commands.registerCommand('endpointCounter.groupByFile',     () => provider.setGroupBy('file')),
+    vscode.commands.registerCommand('endpointCounter.groupByFile', () => provider.setGroupBy('file')),
   );
 
   // ── Auto-refresh + decoraciones ───────────────────────────────────────────
