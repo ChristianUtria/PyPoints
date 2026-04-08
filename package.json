@@ -1,14 +1,47 @@
 {
-  "name": "contador-endpoints-python",
-  "displayName": "PyPoints: Python Endpoint Counter",
-  "description": "Analiza proyectos Python y detecta endpoints de Flask, FastAPI y Django con validaciones avanzadas",
-  "version": "0.0.2",
+  "name": "python-api-endpoint-explorer",
+  "displayName": "PyPoints: Python API Endpoint Explorer",
+  "description": "Scan, analyze and explore Python API endpoints for Flask, FastAPI and Django. Detect routes, HTTP methods, duplicates and issues with advanced validation.",
+  "version": "0.1.0",
   "publisher": "christian-dev",
+  "license": "MIT",
+
+  "keywords": [
+    "python",
+    "api",
+    "rest api",
+    "endpoints",
+    "flask",
+    "fastapi",
+    "django",
+    "route explorer",
+    "api explorer",
+    "http methods",
+    "backend",
+    "developer tools",
+    "code analysis",
+    "debug api",
+    "vscode python"
+  ],
+
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Other"],
-  "icon": "media/logotipo.png",
+
+  "categories": [
+    "Programming Languages",
+    "Visualization",
+    "Other"
+  ],
+
+  "icon": "media/logotipo_v2.png",
+
+  "galleryBanner": {
+    "color": "#1E1E2E",
+    "theme": "dark"
+  },
+
+  "qna": "marketplace",
 
   "activationEvents": [
     "onView:endpointExplorer",
@@ -22,12 +55,18 @@
     "url": "https://github.com/ChristianUtria/PyPoints.git"
   },
 
+  "homepage": "https://github.com/ChristianUtria/PyPoints",
+
+  "bugs": {
+    "url": "https://github.com/ChristianUtria/PyPoints/issues"
+  },
+
   "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
           "id": "endpointCounter",
-          "title": "Endpoint Counter",
+          "title": "PyPoints",
           "icon": "media/icon.svg"
         }
       ]
@@ -37,30 +76,30 @@
       "endpointCounter": [
         {
           "id": "endpointExplorer",
-          "name": "Endpoints",
+          "name": "API Endpoints",
           "icon": "media/icon.svg",
-          "contextualTitle": "Python Endpoints"
+          "contextualTitle": "PyPoints Explorer"
         }
       ]
     },
 
     "commands": [
-      { "command": "endpointCounter.refresh",        "title": "Actualizar Endpoints",      "icon": "$(refresh)" },
-      { "command": "endpointCounter.scanWorkspace",  "title": "Escanear Workspace",        "icon": "$(sync)" },
-      { "command": "endpointCounter.copyRoute",      "title": "Copiar Ruta",               "icon": "$(copy)" },
-      { "command": "endpointCounter.copyCurl",       "title": "Copiar como cURL",          "icon": "$(terminal)" },
-      { "command": "endpointCounter.peekCode",       "title": "Ver Código (Preview)",      "icon": "$(open-preview)" },
+      { "command": "endpointCounter.refresh",        "title": "Refrescar Endpoints",      "icon": "$(refresh)" },
+      { "command": "endpointCounter.scanWorkspace",  "title": "Escaner Workspace",         "icon": "$(sync)" },
+      { "command": "endpointCounter.copyRoute",      "title": "Copiar Route",             "icon": "$(copy)" },
+      { "command": "endpointCounter.copyCurl",       "title": "Copiar cURL",           "icon": "$(terminal)" },
+      { "command": "endpointCounter.peekCode",       "title": "Preview Code",           "icon": "$(open-preview)" },
 
-      { "command": "endpointCounter.search",         "title": "Buscar Endpoints",          "icon": "$(search)" },
-      { "command": "endpointCounter.filterByMethod", "title": "Filtrar por Método HTTP",   "icon": "$(filter)" },
-      { "command": "endpointCounter.showOnlyIssues", "title": "Mostrar Solo Problemas",    "icon": "$(error)" },
-      { "command": "endpointCounter.clearFilters",   "title": "Limpiar Filtros",           "icon": "$(clear-all)" },
+      { "command": "endpointCounter.search",         "title": "buscar Endpoints",       "icon": "$(search)" },
+      { "command": "endpointCounter.filterByMethod", "title": "filtrar por HTTP Method",  "icon": "$(filter)" },
+      { "command": "endpointCounter.showOnlyIssues", "title": "Mostrar solo problemas",       "icon": "$(error)" },
+      { "command": "endpointCounter.clearFilters",   "title": "Limpiar filtros",          "icon": "$(clear-all)" },
 
-      { "command": "endpointCounter.exportJson",     "title": "Exportar JSON",             "icon": "$(export)" },
-      { "command": "endpointCounter.exportMarkdown", "title": "Exportar Markdown",         "icon": "$(markdown)" },
+      { "command": "endpointCounter.exportJson",     "title": "Exportar en Json",         "icon": "$(export)" },
+      { "command": "endpointCounter.exportMarkdown", "title": "Exportar en Markdown",     "icon": "$(markdown)" },
 
-      { "command": "endpointCounter.groupByCategory","title": "Agrupar por Categoría" },
-      { "command": "endpointCounter.groupByFile",    "title": "Agrupar por Archivo" }
+      { "command": "endpointCounter.groupByCategory","title": "Agrupar por categoria" },
+      { "command": "endpointCounter.groupByFile",    "title": "Agrupar por archivo" }
     ],
 
     "menus": {
@@ -146,7 +185,9 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "lint": "eslint src --ext ts"
+    "lint": "eslint src --ext ts",
+    "package": "vsce package",
+    "publish": "vsce publish"
   },
 
   "devDependencies": {
@@ -155,6 +196,7 @@
     "typescript": "^5.3.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
+    "@vscode/vsce": "^3.0.0",
     "eslint": "^8.0.0"
   }
 }
