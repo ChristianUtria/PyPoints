@@ -2,132 +2,169 @@
 
 Herramienta avanzada para analizar, visualizar y entender endpoints de APIs en proyectos Python directamente desde Visual Studio Code.
 
-PyPoints convierte tu código backend en una representación clara, estructurada y navegable, permitiéndote detectar errores, duplicados y problemas de diseño en segundos.
+PyPoints transforma tu código backend en un mapa interactivo de tu API, permitiéndote detectar errores, inconsistencias y problemas de diseño en segundos.
 
 ## Visión general
 
-En proyectos backend modernos, los endpoints suelen estar distribuidos en múltiples archivos, frameworks y capas. Esto dificulta comprender la estructura completa de la API, detectar errores antes de producción, mantener consistencia en rutas y métodos y navegar rápidamente entre funcionalidades.
+En proyectos backend reales, los endpoints suelen estar dispersos en múltiples archivos, lo que dificulta:
 
-PyPoints resuelve este problema proporcionando un análisis estático inteligente que transforma tu código en un mapa interactivo de tu API.
+* Entender la arquitectura completa de la API  
+* Detectar errores antes de producción  
+* Mantener consistencia en rutas y métodos  
+* Navegar rápidamente entre funcionalidades  
+
+PyPoints resuelve este problema con análisis estático inteligente, centralizando toda tu API en una vista clara y accionable.
 
 > [!TIP]
-> Diseñado para desarrolladores backend que trabajan con Flask, FastAPI o Django y necesitan visibilidad inmediata sobre su API.
+> Ideal para desarrolladores backend que trabajan con Flask, FastAPI o Django y necesitan visibilidad inmediata sobre su sistema.
 
 ## PREVIEW
-### Explorador de endpoints en tiempo real
-![Explorer Demo](media/INICIO.gif)
 
+### Explorador en acción
+
+![Explorer Demo](media/INICIO.gif)
 
 ## Capacidades principales
 
 ### Exploración centralizada de endpoints
 
-Visualiza todos los endpoints detectados en un único panel dentro de Visual Studio Code.
+Visualiza todos los endpoints en un único panel dentro de VS Code.
 
-* Listado completo y estructurado
-* Agrupación por archivo o categoría
-* Navegación directa al código fuente
-* Vista jerárquica clara y escalable
+* Estructura clara y jerárquica  
+* Agrupación por archivo o categoría  
+* Acceso directo al código fuente  
+* Escalable para proyectos grandes  
 
-Aquí puedes insertar una imagen o GIF del panel principal.
+> [!IMPORTANT]
+> Esto elimina la necesidad de buscar manualmente rutas en múltiples archivos.
+
+---
 
 ### Búsqueda y filtrado avanzado
-### Funcionalidad, buscador, filtros, limpiar filtros, actualizar
 
 ![Explorer Demo](media/funcionalidades_barra.gif)
 
-Reduce el tiempo de localización de endpoints de minutos a segundos.
+Permite encontrar cualquier endpoint en segundos.
 
-* Búsqueda por nombre, ruta, método o archivo
-* Filtro por método HTTP
-* Visualización exclusiva de endpoints con problemas
+Incluye:
+
+* Búsqueda por nombre, ruta, método o archivo  
+* Filtro por método HTTP (GET, POST, etc.)  
+* Vista exclusiva de endpoints con problemas  
 
 > [!NOTE]
-> Especialmente útil en proyectos grandes donde la navegación manual no es eficiente.
+> En proyectos grandes, esta función reduce drásticamente el tiempo de navegación.
+
+---
 
 ### Análisis estático y validación
 
-PyPoints no solo detecta endpoints, sino que evalúa su calidad.
+PyPoints no solo detecta endpoints, también evalúa su calidad.
 
-Incluye validaciones como:
+Detecta automáticamente:
 
-* Rutas mal definidas
-* Parámetros inválidos
-* Uso de código de depuración (`print`)
-* Funciones sin retorno
-* Nombres poco descriptivos
+* Rutas mal formadas  
+* Parámetros inválidos  
+* Uso de `print()` (debug en producción)  
+* Funciones sin `return`  
+* Nombres poco descriptivos  
 
-### Ejemplo de uno de los varios casos de advertencias 
 ![Explorer Demo](media/advertencia.png)
 
 > [!WARNING]
-> Estos problemas pueden generar fallos en producción o dificultar el mantenimiento del sistema.
+> Estos problemas pueden causar fallos en producción o dificultar el mantenimiento.
 
-### Detección de conflictos y duplicados
 
-Identifica inconsistencias críticas en tu API:
+---
 
-* Endpoints con misma ruta y método
-* Funciones duplicadas en distintos archivos
-* Posibles colisiones de comportamiento
+### Detección de duplicados y conflictos
 
-### Ejemplo de uno de los varios casos de errores
+Identifica errores críticos en tu API:
+
+* Rutas duplicadas con el mismo método  
+* Funciones repetidas en diferentes archivos  
+* Posibles colisiones de comportamiento  
+
 ![Explorer Demo](media/error.png)
 
-### Vista detallada de endpoints
+> [!IMPORTANT]
+> Este tipo de errores suele pasar desapercibido hasta producción.
 
-Cada endpoint cuenta con un panel de análisis completo:
+---
 
-* Código fuente formateado
-* Información estructurada del endpoint
-* Indicadores visuales de estado
-* Generación automática de comandos cURL
+### Vista detallada de endpoints (Preview interactivo)
 
 ![Explorer Demo](media/preview.gif)
 
-### Clasificación de complejidad
+Cada endpoint tiene un panel completo con:
 
-Evaluación automática del nivel de complejidad del endpoint:
-
-```python
-* Simple (I)
-* Medio (II)
-* Complejo (III)
-```
+* Código fuente formateado  
+* Información estructurada  
+* Indicadores visuales de estado  
+* Generación automática de cURL  
 
 > [!TIP]
-> Los endpoints complejos suelen ser los principales candidatos a optimización.
-
-![Explorer Demo](media/focus_mouse.png)
+> Usa esta vista como alternativa ligera a herramientas como Postman.
 
 
-### Integración con el editor
+---
 
-PyPoints se integra directamente en tu flujo de trabajo:
+### Clasificación de complejidad
 
-* Decoraciones visuales en el código
-* Indicadores de errores y advertencias en línea
-* Navegación inmediata al endpoint
+PyPoints analiza automáticamente la complejidad del endpoint:
 
-### Exportación de información
+```python
+Simple   (I)
+Medio    (II)
+Complejo (III)
+```
 
-Permite generar documentación estructurada de tu API:
+Esto se basa en la cantidad de líneas de la función.
 
-* Exportación en formato JSON
-* Exportación en formato Markdown
+> [!TIP]
+> Los endpoints complejos suelen ser los principales candidatos a refactorización.
+
+---
+
+### Integración directa con el editor
+
+PyPoints se integra completamente en VS Code:
+
+* Indicadores visuales en el código  
+* Errores y advertencias en línea  
+* Navegación instantánea al endpoint  
+
+> [!IMPORTANT]
+> No necesitas cambiar de herramienta: todo ocurre dentro de tu editor.
+
+
+
+---
+
+### Exportación de endpoints
+
+Genera documentación automáticamente:
+
+* Exportación a JSON  
+* Exportación a Markdown  
 
 > [!NOTE]
-> Útil para documentación técnica, auditorías o colaboración en equipo.
+> Ideal para documentación técnica, auditorías o trabajo en equipo.
+
+---
 
 ## Flujo de uso
 
-1. Abre tu proyecto Python en Visual Studio Code
-2. Accede al panel de PyPoints
-3. Ejecuta Scan Workspace
-4. Explora, filtra y analiza tus endpoints
+1. Abre tu proyecto Python en Visual Studio Code  
+2. Accede al panel de PyPoints  
+3. Ejecuta "Scan Workspace"  
+4. Explora, filtra y analiza tus endpoints  
 
 > [!TIP]
-> Utiliza la búsqueda integrada para localizar endpoints específicos en proyectos grandes.
+> Usa la búsqueda para ubicar endpoints específicos en segundos.
+
+
+---
 
 ## Ejemplo
 
@@ -137,54 +174,33 @@ def get_users():
     return {"users": []}
 ```
 
-Resultado del análisis:
+Resultado:
 
-* Método HTTP: GET
-* Ruta: /users
-* Función: get_users
-* Complejidad: simple
+* Método: GET  
+* Ruta: /users  
+* Función: get_users  
+* Complejidad: simple  
 
 > [!TIP]
-> dejar el mouse fijo en un endpoint hace que puedas ver su informacion como se muestra a continuacion:
-
-
+> Mantén el cursor sobre un endpoint para ver su información detallada.
+![Explorer Demo](media/focus_mouse.png)
+---
 
 ## Casos de uso
 
-* Auditoría de APIs existentes
-* Revisión de código backend
-* Identificación de errores antes de despliegue
-* Generación de documentación técnica
-* Comprensión de proyectos complejos
+* Auditoría de APIs existentes  
+* Revisión de código backend  
+* Identificación de errores antes de despliegue  
+* Generación de documentación técnica  
+* Onboarding en proyectos complejos  
 
-## Limitaciones actuales
-
-* No detecta endpoints dinámicos altamente abstractos
-* En Django, el análisis se centra en archivos de rutas
-* Funciones con múltiples flujos complejos pueden requerir revisión manual
-
-> [!WARNING]
-> PyPoints es una herramienta de análisis estático y no reemplaza pruebas funcionales o de integración.
-
-## Roadmap
-
-* Soporte para Java (Spring Boot)
-* Soporte para Node.js (Express)
-* Exportación a OpenAPI / Swagger
-* Testing de endpoints dentro de VS Code
-* Métricas avanzadas de calidad de API
+--- 
 
 ## Requisitos
 
-* Visual Studio Code ≥ 1.85
-* Proyecto en Python
+* Visual Studio Code ≥ 1.85  
+* Proyecto en Python  
 
-No se requieren configuraciones adicionales.
+No requiere configuración adicional.
 
-## Licencia
-
-MIT
-
-## Autor
-
-Desarrollado con enfoque en productividad, calidad de código y análisis real de APIs.
+---
