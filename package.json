@@ -1,8 +1,8 @@
 {
-  "name": "python-api-endpoint-explorer",
+  "name": "pypoints",
   "displayName": "PyPoints: Python API Endpoint Explorer",
   "description": "Scan, analyze and explore Python API endpoints for Flask, FastAPI and Django. Detect routes, HTTP methods, duplicates and issues with advanced validation.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "christian-dev",
   "license": "MIT",
 
@@ -84,19 +84,20 @@
     },
 
     "commands": [
-      { "command": "endpointCounter.refresh",        "title": "Refrescar Endpoints",      "icon": "$(refresh)" },
-      { "command": "endpointCounter.scanWorkspace",  "title": "Escaner Workspace",         "icon": "$(sync)" },
-      { "command": "endpointCounter.copyRoute",      "title": "Copiar Route",             "icon": "$(copy)" },
-      { "command": "endpointCounter.copyCurl",       "title": "Copiar cURL",           "icon": "$(terminal)" },
-      { "command": "endpointCounter.peekCode",       "title": "Preview Code",           "icon": "$(open-preview)" },
+      { "command": "endpointCounter.refresh",        "title": "Refrescar Endpoints",       "icon": "$(refresh)" },
+      { "command": "endpointCounter.scanWorkspace",  "title": "Escaner Workspace",          "icon": "$(sync)" },
+      { "command": "endpointCounter.copyRoute",      "title": "Copiar Route",               "icon": "$(copy)" },
+      { "command": "endpointCounter.copyCurl",       "title": "Copiar cURL",                "icon": "$(terminal)" },
+      { "command": "endpointCounter.peekCode",       "title": "Preview Code",               "icon": "$(open-preview)" },
+      { "command": "endpointCounter.runGetTest",     "title": "▶ Test GET",                 "icon": "$(play)" },
 
-      { "command": "endpointCounter.search",         "title": "buscar Endpoints",       "icon": "$(search)" },
-      { "command": "endpointCounter.filterByMethod", "title": "filtrar por HTTP Method",  "icon": "$(filter)" },
-      { "command": "endpointCounter.showOnlyIssues", "title": "Mostrar solo problemas",       "icon": "$(error)" },
-      { "command": "endpointCounter.clearFilters",   "title": "Limpiar filtros",          "icon": "$(clear-all)" },
+      { "command": "endpointCounter.search",         "title": "Buscar Endpoints",           "icon": "$(search)" },
+      { "command": "endpointCounter.filterByMethod", "title": "Filtrar por HTTP Method",    "icon": "$(filter)" },
+      { "command": "endpointCounter.showOnlyIssues", "title": "Mostrar solo problemas",     "icon": "$(error)" },
+      { "command": "endpointCounter.clearFilters",   "title": "Limpiar filtros",            "icon": "$(clear-all)" },
 
-      { "command": "endpointCounter.exportJson",     "title": "Exportar en Json",         "icon": "$(export)" },
-      { "command": "endpointCounter.exportMarkdown", "title": "Exportar en Markdown",     "icon": "$(markdown)" },
+      { "command": "endpointCounter.exportJson",     "title": "Exportar en Json",           "icon": "$(export)" },
+      { "command": "endpointCounter.exportMarkdown", "title": "Exportar en Markdown",       "icon": "$(markdown)" },
 
       { "command": "endpointCounter.groupByCategory","title": "Agrupar por categoria" },
       { "command": "endpointCounter.groupByFile",    "title": "Agrupar por archivo" }
@@ -159,23 +160,33 @@
       "view/item/context": [
         {
           "command": "endpointCounter.goToLine",
-          "when": "view == endpointExplorer && viewItem == endpoint",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint/",
           "group": "navigation@1"
         },
         {
           "command": "endpointCounter.peekCode",
-          "when": "view == endpointExplorer && viewItem == endpoint",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint/",
           "group": "navigation@2"
         },
         {
+          "command": "endpointCounter.runGetTest",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint-get/",
+          "group": "navigation@3"
+        },
+        {
           "command": "endpointCounter.copyRoute",
-          "when": "view == endpointExplorer && viewItem == endpoint",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint/",
           "group": "inline@1"
         },
         {
           "command": "endpointCounter.copyCurl",
-          "when": "view == endpointExplorer && viewItem == endpoint",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint/",
           "group": "inline@2"
+        },
+        {
+          "command": "endpointCounter.runGetTest",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint-get/",
+          "group": "inline@3"
         }
       ]
     }
