@@ -84,6 +84,7 @@
     },
 
     "commands": [
+      {"command": "endpointCounter.goToLine",        "title": "Ir a línea del endpoint"},
       { "command": "endpointCounter.refresh",        "title": "Refrescar Endpoints",       "icon": "$(refresh)" },
       { "command": "endpointCounter.scanWorkspace",  "title": "Escaner Workspace",          "icon": "$(sync)" },
       { "command": "endpointCounter.copyRoute",      "title": "Copiar Route",               "icon": "$(copy)" },
@@ -104,6 +105,7 @@
     ],
 
     "menus": {
+      
       "view/title": [
         {
           "command": "endpointCounter.refresh",
@@ -170,7 +172,7 @@
         },
         {
           "command": "endpointCounter.runGetTest",
-          "when": "view == endpointExplorer && viewItem =~ /endpoint-get/",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint/",
           "group": "navigation@3"
         },
         {
@@ -185,7 +187,7 @@
         },
         {
           "command": "endpointCounter.runGetTest",
-          "when": "view == endpointExplorer && viewItem =~ /endpoint-get/",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint/",
           "group": "inline@3"
         }
       ]
