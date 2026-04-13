@@ -70,7 +70,6 @@ function detectServerConfig(workspaceFolders: readonly vscode.WorkspaceFolder[])
     try {
       const content = fs.readFileSync(filePath, 'utf8');
 
-      // Flask: app.run(host='0.0.0.0', port=5000, ssl_context=...)
       const flaskRunMatch = content.match(/app\.run\s*\(([^)]*)\)/s);
       if (flaskRunMatch) {
         const args = flaskRunMatch[1];
@@ -81,7 +80,6 @@ function detectServerConfig(workspaceFolders: readonly vscode.WorkspaceFolder[])
         if (/ssl_context/.test(args)) useSSL = true;
       }
 
-      // FastAPI: uvicorn.run(...)
       const uvicornMatch = content.match(/uvicorn\.run\s*\(([^)]*)\)/s);
       if (uvicornMatch) {
         const args = uvicornMatch[1];
@@ -92,13 +90,11 @@ function detectServerConfig(workspaceFolders: readonly vscode.WorkspaceFolder[])
         if (/ssl_keyfile|ssl_certfile/.test(args)) useSSL = true;
       }
 
-      // os.environ / os.getenv PORT fallback
       const envPortMatch = content.match(/os\.(?:environ|getenv)\s*(?:\[|\.get\s*\()\s*['"]PORT['"]\s*(?:\]|[,)])\s*(?:,\s*['"]?(\d+)['"]?)?/);
       if (envPortMatch && envPortMatch[1] && confidence === 'low') {
         port = parseInt(envPortMatch[1], 10); confidence = 'medium'; source = path.basename(filePath);
       }
 
-      // Django runserver
       const djangoMatch = content.match(/runserver\s+(?:([\w.]+):)?(\d+)/);
       if (djangoMatch) {
         if (djangoMatch[1]) host = djangoMatch[1] === '0.0.0.0' ? 'localhost' : djangoMatch[1];
@@ -106,7 +102,6 @@ function detectServerConfig(workspaceFolders: readonly vscode.WorkspaceFolder[])
         confidence = 'high'; source = path.basename(filePath);
       }
 
-      // .env style PORT= inside .py
       if (confidence === 'low') {
         const portEnvLine = content.match(/^PORT\s*=\s*(\d+)/m);
         if (portEnvLine) { port = parseInt(portEnvLine[1], 10); confidence = 'medium'; source = path.basename(filePath); }
@@ -114,7 +109,6 @@ function detectServerConfig(workspaceFolders: readonly vscode.WorkspaceFolder[])
     } catch { /* skip */ }
   }
 
-  // Scan .env files
   for (const folder of workspaceFolders) {
     for (const envFile of ['.env', '.env.local', '.env.development']) {
       const envPath = path.join(folder.uri.fsPath, envFile);
@@ -132,7 +126,6 @@ function detectServerConfig(workspaceFolders: readonly vscode.WorkspaceFolder[])
     }
   }
 
-  // Infer SSL from port
   if (port === 443 || port === 8443) useSSL = true;
   if (port === 80 || port === 8080 || port === 5000 || port === 3000 || port === 8000) useSSL = false;
 
@@ -149,7 +142,6 @@ function buildCandidateUrls(config?: ServerConfig): string[] {
   const add = (u: string) => { if (!seen.has(u)) { seen.add(u); urls.push(u); } };
 
   if (config) add(config.baseUrl);
-  // Swap localhost <-> 127.0.0.1 for detected
   if (config?.baseUrl.includes('localhost')) {
     add(config.baseUrl.replace('localhost', '127.0.0.1'));
   } else if (config?.baseUrl.includes('127.0.0.1')) {
@@ -388,10 +380,10 @@ function applyEditorDecorations(editor: vscode.TextEditor, endpoints: Endpoint[]
 // ─── WebView Panel ────────────────────────────────────────────────────────────
 
 function showEndpointPreviewPanel(ep: Endpoint, context: vscode.ExtensionContext, serverConfig?: ServerConfig): void {
-  const panel = vscode.window.createWebviewPanel('endpointPreview', `▶ ${ep.functionName}`, vscode.ViewColumn.Beside, { enableScripts: true, retainContextWhenHidden: true });
+  const panel = vscode.window.createWebviewPanel('endpointPreview', `▶ ${ep.functionName}`, vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: true,enableFindWidget: true  });
 
   const escapedCode = (ep.sourceCode ?? '# No disponible').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const methodBadgeColor: Record<string, string> = { GET: '#22c55e', POST: '#3b82f6', PUT: '#eab308', PATCH: '#f97316', DELETE: '#ef4444' };
+  const methodBadgeColor: Record<string, string> = { GET: '#22c55e', POST: '#3b82f6', PUT: '#eab308', PATCH: '#f97316', DELETE: '#ef4444', HEAD: '#a855f7', OPTIONS: '#6b7280' };
   const badgeColor = methodBadgeColor[ep.method] ?? '#888';
   const hasErrors = ep.issues?.some(i => i.type === 'error') || ep.isDuplicate;
   const hasWarnings = ep.issues?.some(i => i.type === 'warning');
@@ -405,7 +397,6 @@ function showEndpointPreviewPanel(ep: Endpoint, context: vscode.ExtensionContext
   const confidenceColor = serverConfig ? ({ high: '#22c55e', medium: '#eab308', low: '#888' })[serverConfig.confidence] : '#888';
   const sourceLabel = serverConfig?.source ?? 'fallback';
 
-  const isGetCapable = ep.method === 'GET' || ep.method === 'GET/POST';
   const routeParams = [
     ...ep.route.matchAll(/<(?:\w+:)?(\w+)>/g),
     ...ep.route.matchAll(/\{(\w+)\}/g),
@@ -420,7 +411,18 @@ function showEndpointPreviewPanel(ep: Endpoint, context: vscode.ExtensionContext
   const candidateUrls = buildCandidateUrls(serverConfig);
   const candidateOptionsHtml = candidateUrls.map(u => `<option value="${u}"${u === detectedUrl ? ' selected' : ''}>${u}</option>`).join('');
 
-  const escapedCurl = (`curl -X GET "${detectedUrl}${ep.route}"`).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // Determine if this method has a body by default
+  const methodsWithBody = ['POST', 'PUT', 'PATCH'];
+  const hasBodyByDefault = methodsWithBody.includes(ep.method.toUpperCase());
+
+  // Build curl example (updated after method can change in UI)
+  const curlBody = hasBodyByDefault ? ` \\\n  -H "Content-Type: application/json" \\\n  -d '{}'` : '';
+  const escapedCurl = (`curl -X ${ep.method} "${detectedUrl}${ep.route}"${curlBody}`).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const gifPath = vscode.Uri.file(path.join(context.extensionPath, 'media', 'antena.gif'));
+  const gifUri = panel.webview.asWebviewUri(gifPath);
+  const gifPath2 = vscode.Uri.file(path.join(context.extensionPath, 'media', 'forma.gif'));
+  const gifUri2 = panel.webview.asWebviewUri(gifPath2);
 
   panel.webview.html = /* html */`<!DOCTYPE html>
 <html lang="es">
@@ -482,7 +484,12 @@ function showEndpointPreviewPanel(ep: Endpoint, context: vscode.ExtensionContext
   /* URL bar */
   .url-bar { display:flex; align-items:center; gap:6px; background:var(--vscode-input-background,rgba(128,128,128,.1)); border:1px solid var(--vscode-input-border,rgba(128,128,128,.3)); border-radius:var(--radius); padding:4px 8px; transition:border-color .15s; }
   .url-bar:focus-within { border-color:${badgeColor}66; }
-  .url-method-tag { font-size:10px; font-weight:700; letter-spacing:1px; color:${badgeColor}; font-family:monospace; white-space:nowrap; }
+
+  /* Method selector in URL bar */
+  .method-select { background:var(--vscode-dropdown-background,rgba(0,0,0,.2)); color:var(--vscode-foreground); border:1px solid var(--vscode-widget-border,rgba(128,128,128,.35)); border-radius:4px; font-size:11px; font-weight:700; font-family:monospace; padding:2px 6px; cursor:pointer; outline:none; letter-spacing:.5px; transition:border-color .12s; flex-shrink:0; }
+  .method-select:focus { border-color:${badgeColor}88; }
+  .method-select option { background:var(--vscode-dropdown-background,#1e1e2e); color:var(--vscode-foreground); font-weight:700; }
+
   .url-select { background:none; border:none; color:var(--vscode-descriptionForeground); font-size:11px; font-family:monospace; outline:none; cursor:pointer; border-right:1px solid var(--vscode-widget-border,rgba(128,128,128,.25)); padding-right:6px; margin-right:2px; max-width:185px; }
   .url-select option { background:var(--vscode-dropdown-background,#1e1e2e); color:var(--vscode-foreground); }
   .url-route-editable { flex:1; background:none; border:none; outline:none; font-size:12px; font-family:monospace; color:var(--vscode-foreground); min-width:0; }
@@ -510,6 +517,21 @@ function showEndpointPreviewPanel(ep: Endpoint, context: vscode.ExtensionContext
   .icon-btn.rm:hover { color:#ef4444; border-color:#ef444455; }
   .add-row-btn { background:none; border:1px dashed var(--vscode-widget-border,rgba(128,128,128,.3)); color:var(--vscode-descriptionForeground); border-radius:4px; padding:2px 10px; font-size:11px; cursor:pointer; margin-top:6px; display:inline-flex; align-items:center; gap:4px; transition:all .12s; font-family:var(--vscode-font-family,sans-serif); }
   .add-row-btn:hover { border-color:${badgeColor}55; color:${badgeColor}; }
+
+  /* Body editor */
+  .body-editor-wrap { display:flex; flex-direction:column; gap:6px; }
+  .body-format-row { display:flex; align-items:center; gap:8px; }
+  .body-format-label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--vscode-descriptionForeground); font-weight:600; }
+  .body-format-select { background:var(--vscode-dropdown-background,rgba(0,0,0,.2)); color:var(--vscode-foreground); border:1px solid var(--vscode-widget-border,rgba(128,128,128,.25)); border-radius:4px; font-size:11px; padding:2px 6px; outline:none; cursor:pointer; font-family:var(--vscode-font-family,sans-serif); }
+  .body-format-select:focus { border-color:${badgeColor}88; }
+  .body-textarea { width:100%; min-height:120px; max-height:280px; resize:vertical; background:var(--vscode-input-background,rgba(128,128,128,.1)); color:var(--vscode-input-foreground,var(--vscode-foreground)); border:1px solid var(--vscode-input-border,rgba(128,128,128,.25)); border-radius:var(--radius); padding:8px 10px; font-size:12px; font-family:var(--vscode-editor-font-family,monospace); line-height:1.6; outline:none; transition:border-color .12s; tab-size:2; }
+  .body-textarea:focus { border-color:${badgeColor}88; }
+  .body-actions { display:flex; gap:6px; align-items:center; }
+  .body-action-btn { background:none; border:1px solid var(--vscode-widget-border,rgba(128,128,128,.2)); color:var(--vscode-descriptionForeground); border-radius:4px; padding:2px 8px; font-size:10px; cursor:pointer; transition:all .12s; font-family:var(--vscode-font-family,sans-serif); }
+  .body-action-btn:hover { border-color:${badgeColor}55; color:${badgeColor}; }
+  .body-validation { font-size:10px; padding:2px 8px; border-radius:3px; display:none; }
+  .body-valid { background:#22c55e11; color:#22c55e; border:1px solid #22c55e33; display:inline-block; }
+  .body-invalid { background:#ef444411; color:#ef4444; border:1px solid #ef444433; display:inline-block; }
 
   .collapse-toggle { background:none; border:none; cursor:pointer; width:100%; display:flex; align-items:center; gap:6px; padding:5px 0; color:var(--vscode-descriptionForeground); font-size:10px; text-transform:uppercase; letter-spacing:.5px; font-weight:600; font-family:var(--vscode-font-family,sans-serif); transition:color .12s; }
   .collapse-toggle:hover { color:var(--vscode-foreground); }
@@ -545,6 +567,7 @@ function showEndpointPreviewPanel(ep: Endpoint, context: vscode.ExtensionContext
   /* History */
   .hist-item { display:flex; align-items:center; gap:8px; padding:5px 8px; border-radius:5px; cursor:pointer; font-size:11px; border:1px solid transparent; transition:all .1s; }
   .hist-item:hover { background:rgba(128,128,128,.08); border-color:var(--vscode-widget-border,rgba(128,128,128,.2)); }
+  .hist-method { font-size:9px; font-weight:700; font-family:monospace; padding:1px 5px; border-radius:3px; flex-shrink:0; }
   .hist-route { font-family:monospace; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .hist-time { color:var(--vscode-descriptionForeground); flex-shrink:0; font-size:10px; }
 
@@ -587,7 +610,7 @@ ${issuesHtml ? `<div class="issues-section">${issuesHtml}</div>` : ''}
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('python',this)">Python</button>
       <button class="tab-btn" onclick="switchTab('curl',this)">cURL</button>
-      ${isGetCapable ? `<button class="tab-btn" onclick="switchTab('test',this)">▶ Test GET</button>` : ''}
+      <button class="tab-btn" onclick="switchTab('test',this)">▶ Test</button>
     </div>
     <button class="copy-btn" id="copyBtn" onclick="copyActive()">⎘ Copiar</button>
   </div>
@@ -595,7 +618,6 @@ ${issuesHtml ? `<div class="issues-section">${issuesHtml}</div>` : ''}
   <div id="tab-python" class="tab-content active"><pre><code id="code-python">${escapedCode}</code></pre></div>
   <div id="tab-curl" class="tab-content"><pre><code id="code-curl">${escapedCurl}</code></pre></div>
 
-  ${isGetCapable ? `
   <div id="tab-test" class="tab-content">
   <div class="postman-section">
 
@@ -609,12 +631,20 @@ ${issuesHtml ? `<div class="issues-section">${issuesHtml}</div>` : ''}
       <button class="ping-btn" onclick="pingServer()" title="Verificar si el servidor responde">↻ ping</button>
     </div>
 
-    <!-- URL bar with smart dropdown -->
+    <!-- URL bar with method selector + smart dropdown -->
     <div class="url-bar">
-      <span class="url-method-tag">GET</span>
+      <select class="method-select" id="methodSelect" onchange="onMethodChange()" title="Método HTTP">
+        <option value="GET"${ep.method === 'GET' ? ' selected' : ''}>GET</option>
+        <option value="POST"${ep.method === 'POST' ? ' selected' : ''}>POST</option>
+        <option value="PUT"${ep.method === 'PUT' ? ' selected' : ''}>PUT</option>
+        <option value="PATCH"${ep.method === 'PATCH' ? ' selected' : ''}>PATCH</option>
+        <option value="DELETE"${ep.method === 'DELETE' ? ' selected' : ''}>DELETE</option>
+        <option value="HEAD"${ep.method === 'HEAD' ? ' selected' : ''}>HEAD</option>
+        <option value="OPTIONS"${ep.method === 'OPTIONS' ? ' selected' : ''}>OPTIONS</option>
+      </select>
       <select class="url-select" id="baseUrlSelect" onchange="onBaseChange()">
         ${candidateOptionsHtml}
-        <option value="__custom__">⊕ otra URL…</option>
+        <option value="__custom__"> + otra URL…</option>
       </select>
       <input class="url-route-editable" id="routeEditable" type="text" value="${ep.route}" spellcheck="false" oninput="updateUrlPreview()" title="Edita la ruta directamente si necesitas" />
       <button class="run-btn" id="runBtn" onclick="runRequest()">
@@ -639,6 +669,42 @@ ${issuesHtml ? `<div class="issues-section">${issuesHtml}</div>` : ''}
       <button class="chip" onclick="copyCurlFull()">⎘ Copiar cURL</button>
       <button class="chip" onclick="openBrowser()">↗ Abrir en navegador</button>
       <button class="chip" onclick="clearHistory()">✕ Limpiar historial</button>
+    </div>
+
+    <!-- Request Body (POST/PUT/PATCH) -->
+    <div id="bodySection">
+      <button class="collapse-toggle" onclick="toggle('bodyContent',this)" id="bodyToggle">
+        <span class="c-arrow ${hasBodyByDefault ? 'open' : ''}">▶</span> Body
+        <span id="bodyMethodHint" style="margin-left:4px;font-size:9px;opacity:.6"></span>
+      </button>
+      <div class="collapsible ${hasBodyByDefault ? '' : 'closed'}" id="bodyContent" style="max-height:500px">
+        <div class="params-box">
+          <div class="body-format-row">
+            <span class="params-title" style="margin:0">Formato</span>
+            <select class="body-format-select" id="bodyFormat" onchange="onBodyFormatChange()">
+              <option value="json" selected>JSON</option>
+              <option value="form">Form URL-encoded</option>
+              <option value="text">Texto plano</option>
+              <option value="none">Sin body</option>
+            </select>
+            <span id="bodyValidation" class="body-validation"></span>
+          </div>
+          <div id="bodyEditorWrap" class="body-editor-wrap" style="margin-top:8px">
+            <textarea
+              class="body-textarea"
+              id="bodyTextarea"
+              spellcheck="false"
+              placeholder='{\n  "key": "value"\n}'
+              oninput="validateBody()"
+            ></textarea>
+            <div class="body-actions">
+              <button class="body-action-btn" onclick="formatBody()">⎄ Formatear JSON</button>
+              <button class="body-action-btn" onclick="clearBody()">✕ Limpiar</button>
+              <button class="body-action-btn" onclick="copyBody()">⎘ Copiar body</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Query params -->
@@ -688,7 +754,7 @@ ${issuesHtml ? `<div class="issues-section">${issuesHtml}</div>` : ''}
       </button>
       <div class="collapsible closed" id="histSection" style="max-height:200px;overflow-y:auto">
         <div class="params-box" id="histList">
-          <div class="empty-state" style="padding:10px 0"><span class="empty-icon">📋</span><span class="empty-label">Sin requests aún</span></div>
+          <div class="empty-state" style="padding:10px 0"><span class="empty-icon"><img src="${gifUri2}" alt="tower icon" width="40"></span><span class="empty-label">Sin requests aún</span></div>
         </div>
       </div>
     </div>
@@ -696,14 +762,13 @@ ${issuesHtml ? `<div class="issues-section">${issuesHtml}</div>` : ''}
     <!-- Response -->
     <div id="responseContainer">
       <div class="empty-state">
-        <span class="empty-icon">📡</span>
+        <span class="empty-icon"><img src="${gifUri}" alt="tower icon" width="90"></span>
         <span class="empty-label">Presiona ▶ Enviar para probar el endpoint<br><span style="font-size:10px;opacity:.6">URL detectada automáticamente desde tu código</span></span>
       </div>
     </div>
 
   </div>
   </div>
-  ` : ''}
 </div>
 
 <div id="toast"></div>
@@ -714,9 +779,19 @@ let activeTab = 'python';
 const BASE_ROUTE = ${JSON.stringify(ep.route)};
 const ROUTE_PARAMS = ${JSON.stringify(routeParams)};
 const DETECTED_URL = ${JSON.stringify(detectedUrl)};
+const EP_METHOD = ${JSON.stringify(ep.method)};
+const METHOD_COLORS = {
+  GET:'#22c55e', POST:'#3b82f6', PUT:'#eab308', PATCH:'#f97316',
+  DELETE:'#ef4444', HEAD:'#a855f7', OPTIONS:'#6b7280'
+};
 let history = [];
 
-window.addEventListener('load', () => { pingServer(); updateUrlPreview(); });
+window.addEventListener('load', () => {
+  pingServer();
+  updateUrlPreview();
+  updateMethodColor();
+  updateBodyVisibility();
+});
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 function switchTab(tab, btn) {
@@ -726,16 +801,54 @@ function switchTab(tab, btn) {
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
   if (tab === 'test') { pingServer(); updateUrlPreview(); }
+  if (tab === 'curl') { updateCurlPreview(); }
 }
 function copyActive() {
-  const el = document.getElementById(activeTab === 'test' ? 'code-python' : 'code-' + activeTab);
-  if (!el) return;
-  navigator.clipboard.writeText(el.innerText).then(() => {
+  let text = '';
+  if (activeTab === 'curl') {
+    text = buildCurlCommand();
+  } else {
+    const el = document.getElementById('code-' + activeTab);
+    text = el ? el.innerText : '';
+  }
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('copyBtn');
     const orig = btn.innerHTML;
     btn.innerHTML = '✓ Copiado'; btn.classList.add('copied');
     setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
   });
+}
+
+// ── Method change ─────────────────────────────────────────────────────────────
+function getCurrentMethod() {
+  return (document.getElementById('methodSelect')?.value || EP_METHOD).toUpperCase();
+}
+function onMethodChange() {
+  updateMethodColor();
+  updateBodyVisibility();
+  updateCurlPreview();
+}
+function updateMethodColor() {
+  const sel = document.getElementById('methodSelect');
+  if (!sel) return;
+  const m = sel.value.toUpperCase();
+  const color = METHOD_COLORS[m] || '#888';
+  sel.style.color = color;
+  sel.style.borderColor = color + '88';
+}
+function updateBodyVisibility() {
+  const m = getCurrentMethod();
+  const withBody = ['POST','PUT','PATCH'].includes(m);
+  const hint = document.getElementById('bodyMethodHint');
+  if (hint) hint.textContent = withBody ? '' : '(no aplica para ' + m + ')';
+  // Auto-open body section for methods that typically have body
+  const bodyContent = document.getElementById('bodyContent');
+  const arrow = document.querySelector('#bodySection .c-arrow');
+  if (bodyContent && arrow) {
+    if (withBody) { bodyContent.classList.remove('closed'); arrow.classList.add('open'); }
+    else { bodyContent.classList.add('closed'); arrow.classList.remove('open'); }
+  }
 }
 
 // ── Server ping ───────────────────────────────────────────────────────────────
@@ -752,7 +865,6 @@ async function pingServer() {
     clearTimeout(t);
     dot.className = 'server-dot live';
   } catch(e) {
-    // AbortError = real timeout; others usually mean CORS rejection = server is alive
     dot.className = e.name === 'AbortError' ? 'server-dot dead' : 'server-dot live';
   }
 }
@@ -802,6 +914,84 @@ function updateUrlPreview() {
   if (el) { el.textContent = url; el.classList.toggle('has-params', url !== DETECTED_URL + BASE_ROUTE); }
 }
 
+// ── cURL preview ──────────────────────────────────────────────────────────────
+function buildCurlCommand() {
+  const url = buildUrl();
+  const method = getCurrentMethod();
+  const headers = getHeaders();
+  const withBody = ['POST','PUT','PATCH'].includes(method);
+  const format = document.getElementById('bodyFormat')?.value || 'json';
+  const bodyText = document.getElementById('bodyTextarea')?.value?.trim() || '';
+
+  let h = Object.entries(headers).map(([k,v]) => \` \\\\\n  -H "\${k}: \${v}"\`).join('');
+
+  let bodyPart = '';
+  if (withBody && format !== 'none') {
+    if (format === 'json') {
+      if (!h.includes('Content-Type')) h += \` \\\\\n  -H "Content-Type: application/json"\`;
+      const body = bodyText || '{}';
+      bodyPart = \` \\\\\n  -d '\${body.replace(/'/g, "'\\\\''")}'\`;
+    } else if (format === 'form') {
+      if (!h.includes('Content-Type')) h += \` \\\\\n  -H "Content-Type: application/x-www-form-urlencoded"\`;
+      bodyPart = bodyText ? \` \\\\\n  --data-urlencode '\${bodyText}'\` : '';
+    } else if (format === 'text') {
+      if (!h.includes('Content-Type')) h += \` \\\\\n  -H "Content-Type: text/plain"\`;
+      bodyPart = bodyText ? \` \\\\\n  -d '\${bodyText.replace(/'/g, "'\\\\''")}'\` : '';
+    }
+  }
+
+  return \`curl -X \${method} "\${url}"\${h}\${bodyPart}\`;
+}
+function updateCurlPreview() {
+  const el = document.getElementById('code-curl');
+  if (el) el.textContent = buildCurlCommand();
+}
+
+// ── Body editor ───────────────────────────────────────────────────────────────
+function onBodyFormatChange() {
+  const fmt = document.getElementById('bodyFormat')?.value;
+  const wrap = document.getElementById('bodyEditorWrap');
+  const ta = document.getElementById('bodyTextarea');
+  if (!ta) return;
+  if (fmt === 'none') { if (wrap) wrap.style.display = 'none'; return; }
+  if (wrap) wrap.style.display = 'flex';
+  if (fmt === 'json') ta.placeholder = '{\\n  "key": "value"\\n}';
+  else if (fmt === 'form') ta.placeholder = 'key=value&other=123';
+  else ta.placeholder = 'Texto libre...';
+  validateBody();
+}
+function validateBody() {
+  const fmt = document.getElementById('bodyFormat')?.value;
+  const ta = document.getElementById('bodyTextarea');
+  const badge = document.getElementById('bodyValidation');
+  if (!ta || !badge || fmt !== 'json') { if (badge) { badge.className = 'body-validation'; badge.textContent = ''; } return; }
+  const val = ta.value.trim();
+  if (!val) { badge.className = 'body-validation'; badge.textContent = ''; return; }
+  try {
+    JSON.parse(val);
+    badge.className = 'body-validation body-valid'; badge.textContent = '✓ JSON válido';
+  } catch(e) {
+    badge.className = 'body-validation body-invalid'; badge.textContent = '⊗ ' + e.message.split('\\n')[0];
+  }
+}
+function formatBody() {
+  const ta = document.getElementById('bodyTextarea');
+  if (!ta) return;
+  try {
+    ta.value = JSON.stringify(JSON.parse(ta.value), null, 2);
+    validateBody();
+    toast('JSON formateado ✓');
+  } catch { toast('No es JSON válido'); }
+}
+function clearBody() {
+  const ta = document.getElementById('bodyTextarea');
+  if (ta) { ta.value = ''; validateBody(); }
+}
+function copyBody() {
+  const ta = document.getElementById('bodyTextarea');
+  if (ta) { navigator.clipboard.writeText(ta.value); toast('Body copiado ✓'); }
+}
+
 // ── Row helpers ───────────────────────────────────────────────────────────────
 function addQRow() {
   const d = document.createElement('div'); d.className = 'query-row';
@@ -822,13 +1012,7 @@ function toggle(id, btn) {
 
 // ── Quick chips ───────────────────────────────────────────────────────────────
 function copyFullUrl() { navigator.clipboard.writeText(buildUrl()); toast('URL copiada ✓'); }
-function copyCurlFull() {
-  const url = buildUrl();
-  const headers = getHeaders();
-  const h = Object.entries(headers).map(([k,v]) => \` \\\\\n  -H "\${k}: \${v}"\`).join('');
-  navigator.clipboard.writeText(\`curl -X GET "\${url}"\${h}\`);
-  toast('cURL copiado ✓');
-}
+function copyCurlFull() { navigator.clipboard.writeText(buildCurlCommand()); toast('cURL copiado ✓'); }
 function openBrowser() { vscode.postMessage({ command:'openExternal', url: buildUrl() }); }
 function clearHistory() { history = []; renderHistory(); toast('Historial limpiado'); }
 function toast(msg) {
@@ -848,6 +1032,30 @@ function getHeaders() {
   return h;
 }
 
+// ── Build fetch options ───────────────────────────────────────────────────────
+function buildFetchOptions() {
+  const method = getCurrentMethod();
+  const headers = getHeaders();
+  const withBody = ['POST','PUT','PATCH'].includes(method);
+  const format = document.getElementById('bodyFormat')?.value || 'json';
+  const bodyText = document.getElementById('bodyTextarea')?.value?.trim() || '';
+  const opts = { method, headers: { ...headers } };
+
+  if (withBody && format !== 'none') {
+    if (format === 'json') {
+      opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/json';
+      opts.body = bodyText || '{}';
+    } else if (format === 'form') {
+      opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/x-www-form-urlencoded';
+      opts.body = bodyText;
+    } else if (format === 'text') {
+      opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'text/plain';
+      opts.body = bodyText;
+    }
+  }
+  return opts;
+}
+
 // ── JSON highlight ────────────────────────────────────────────────────────────
 function hlJson(json) {
   if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
@@ -862,9 +1070,10 @@ function hlJson(json) {
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────
-function validate(status, body, elapsed) {
+function validate(status, body, elapsed, method) {
   const checks = [];
   if (status >= 200 && status < 300) checks.push({ ok:true, msg:\`HTTP \${status} — respuesta exitosa\` });
+  else if (status === 405) checks.push({ ok:false, msg:\`HTTP 405 — Método \${method} no permitido en esta ruta\` });
   else if (status >= 400 && status < 500) checks.push({ ok:false, msg:\`HTTP \${status} — error del cliente (ruta incorrecta o parámetros faltantes)\` });
   else if (status >= 500) checks.push({ ok:false, msg:\`HTTP \${status} — error del servidor (revisar logs del backend)\` });
   if (elapsed > 2000) checks.push({ ok:null, msg:\`Respuesta lenta: \${elapsed}ms (>2s)\` });
@@ -902,7 +1111,9 @@ function renderHistory() {
   list.innerHTML = [...history].reverse().map((h, ri) => {
     const idx = history.length - 1 - ri;
     const cls = h.status >= 500 ? 's5' : h.status >= 400 ? 's4' : h.status >= 300 ? 's3' : h.status > 0 ? 's2' : 'se';
+    const mColor = METHOD_COLORS[h.method] || '#888';
     return \`<div class="hist-item" onclick="loadHist(\${idx})">
+      <span class="hist-method" style="background:\${mColor}22;color:\${mColor};border:1px solid \${mColor}44">\${h.method}</span>
       <span class="status-pill \${cls}" style="font-size:10px;padding:0 5px">\${h.status||'ERR'}</span>
       <span class="hist-route">\${h.url}</span>
       <span class="hist-time">\${h.elapsed}ms</span>
@@ -910,49 +1121,49 @@ function renderHistory() {
     </div>\`;
   }).join('');
 }
-function loadHist(idx) { const h = history[idx]; if (h) showRes(h.status, h.statusText, h.headers, h.body, h.elapsed); }
+function loadHist(idx) { const h = history[idx]; if (h) showRes(h.status, h.statusText, h.headers, h.body, h.elapsed, h.method); }
 
 // ── Main request ──────────────────────────────────────────────────────────────
 async function runRequest() {
   const url = buildUrl();
   const btn = document.getElementById('runBtn');
   btn.disabled = true; btn.classList.add('loading');
-  const headers = getHeaders();
+  const opts = buildFetchOptions();
   const t0 = performance.now();
   try {
-    const res = await fetch(url, { method:'GET', headers });
+    const res = await fetch(url, opts);
     const elapsed = Math.round(performance.now() - t0);
     const resHeaders = {};
     res.headers.forEach((v, k) => { resHeaders[k] = v; });
     const body = await res.text();
     const now = new Date();
-    history.push({ url, status:res.status, statusText:res.statusText, headers:resHeaders, body, elapsed, time:now.toLocaleTimeString() });
+    history.push({ url, method:opts.method, status:res.status, statusText:res.statusText, headers:resHeaders, body, elapsed, time:now.toLocaleTimeString() });
     if (history.length > 20) history.shift();
     renderHistory();
-    showRes(res.status, res.statusText, resHeaders, body, elapsed);
+    showRes(res.status, res.statusText, resHeaders, body, elapsed, opts.method);
   } catch(err) {
     const elapsed = Math.round(performance.now() - t0);
-    history.push({ url, status:0, statusText:'Error', headers:{}, body:err.message, elapsed, time:new Date().toLocaleTimeString() });
+    history.push({ url, method:opts.method, status:0, statusText:'Error', headers:{}, body:err.message, elapsed, time:new Date().toLocaleTimeString() });
     renderHistory();
     document.getElementById('responseContainer').innerHTML = \`
       <div class="response-area">
         <div class="res-header"><span class="status-pill se">Error de red</span><div class="res-meta"><span>⏱ \${elapsed}ms</span></div></div>
         <div class="res-body">
-          <div class="v-row v-fail"><span></span><div><strong>No se pudo conectar</strong><div style="font-size:11px;opacity:.8">\${err.message}</div></div></div>
-          <div class="v-row v-warn" style="margin-top:6px"><span>⚠</span><span>¿Está corriendo el servidor en <code>\${getBase()}</code>?<br>, si ya reviso y si esta corriendo ahi, puede por favor verificar que tenga los CORS activos </span></div>
+          <div class="v-row v-fail"><span>⊗</span><div><strong>No se pudo conectar</strong><div style="font-size:11px;opacity:.8">\${err.message}</div></div></div>
+          <div class="v-row v-warn" style="margin-top:6px"><span>⚠</span><span>¿Está corriendo el servidor en <code>\${getBase()}</code>? Si ya lo verificaste, revisa que tenga CORS activos.</span></div>
         </div>
       </div>\`;
   }
   btn.disabled = false; btn.classList.remove('loading');
 }
 
-function showRes(status, statusText, resHeaders, body, elapsed) {
+function showRes(status, statusText, resHeaders, body, elapsed, method) {
   const cls = status >= 500 ? 's5' : status >= 400 ? 's4' : status >= 300 ? 's3' : 's2';
   let fb = '', isJson = false;
   try { fb = hlJson(JSON.stringify(JSON.parse(body), null, 2)); isJson = true; }
   catch { fb = body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   const hHtml = Object.entries(resHeaders).map(([k,v]) => \`<tr><td>\${k}</td><td>\${String(v).replace(/</g,'&lt;')}</td></tr>\`).join('');
-  const vHtml = renderValidation(validate(status, body, elapsed));
+  const vHtml = renderValidation(validate(status, body, elapsed, method || getCurrentMethod()));
   const len = body.length > 1024 ? (body.length/1024).toFixed(1)+' KB' : body.length+' B';
   document.getElementById('responseContainer').innerHTML = \`
     <div class="response-area">
@@ -1160,21 +1371,17 @@ export function activate(context: vscode.ExtensionContext) {
       if (!item.endpoint) return;
       const ep = item.endpoint;
       await vscode.env.clipboard.writeText(ep.route);
-      const actions = ep.method === 'GET' ? ['▶ Test GET', 'Ver código', 'Ir al archivo'] : ['Ver código', 'Ir al archivo'];
+      const actions = ['▶ Test', 'Ver código', 'Ir al archivo'];
       const action = await vscode.window.showInformationMessage(`✓ Ruta copiada: ${ep.route}`, ...actions);
-      if (action === '▶ Test GET' || action === 'Ver código') showEndpointPreviewPanel(ep, context, getServerCfg());
+      if (action === '▶ Test' || action === 'Ver código') showEndpointPreviewPanel(ep, context, getServerCfg());
       else if (action === 'Ir al archivo') vscode.commands.executeCommand('endpointCounter.goToLine', ep);
     }),
     vscode.commands.registerCommand('endpointCounter.peekCode', (item: EndpointItem) => {
       if (item.endpoint) showEndpointPreviewPanel(item.endpoint, context, getServerCfg());
     }),
     vscode.commands.registerCommand('endpointCounter.runGetTest', (item: EndpointItem) => {
-      if (!item.endpoint) return;
-      const ep = item.endpoint;
-      if (ep.method !== 'GET' && ep.method !== 'GET/POST') {
-        vscode.window.showWarningMessage(`El mini-Postman solo soporta GET por ahora. "${ep.functionName}" es ${ep.method}.`); return;
-      }
-      showEndpointPreviewPanel(ep, context, getServerCfg());
+      // Now supports all methods — kept for backwards compatibility
+      if (item.endpoint) showEndpointPreviewPanel(item.endpoint, context, getServerCfg());
     }),
     vscode.commands.registerCommand('endpointCounter.copyCurl', async (item: EndpointItem) => {
       if (!item.endpoint) return;
