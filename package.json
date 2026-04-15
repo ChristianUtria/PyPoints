@@ -1,43 +1,50 @@
 {
   "name": "pypoints",
-  "displayName": "PyPoints: Python API Endpoint Explorer",
-  "description": "Scan, analyze and explore Python API endpoints for Flask, FastAPI and Django. Detect routes, HTTP methods, duplicates and issues with advanced validation.",
-  "version": "0.2.0",
+  "displayName": "PyPoints - Python API Tester & Endpoint Explorer",
+  "description": "Advanced Python API endpoint explorer for Flask, FastAPI and Django. Automatically scan, analyze and visualize routes, HTTP methods and API structure. Test endpoints in real time like a REST client, detect duplicates, validate routes and debug APIs directly inside Visual Studio Code.",
+  "version": "1.0.0",
   "publisher": "christian-dev",
   "license": "MIT",
 
-  "keywords": [
-    "python",
-    "api",
-    "rest api",
-    "endpoints",
-    "flask",
-    "fastapi",
-    "django",
-    "route explorer",
-    "api explorer",
-    "http methods",
-    "backend",
-    "developer tools",
-    "code analysis",
-    "debug api",
-    "vscode python"
-  ],
+"keywords": [
+  "python",
+  "api",
+  "rest api",
+  "api testing",
+  "http client",
+  "endpoint testing",
+  "endpoints",
+  "flask",
+  "fastapi",
+  "django",
+  "route explorer",
+  "api explorer",
+  "http methods",
+  "get post put delete",
+  "backend",
+  "developer tools",
+  "code analysis",
+  "api debugger",
+  "vscode python",
+  "rest client",
+  "api validation"
+],
 
   "engines": {
     "vscode": "^1.85.0"
   },
 
-  "categories": [
-    "Programming Languages",
-    "Visualization",
-    "Other"
-  ],
+"categories": [
+  "Programming Languages",
+  "Debuggers",
+  "Visualization",
+  "Other"
+],
 
-  "icon": "media/logotipo_v2.png",
+  "icon": "media/logotipo_v4.png",
 
   "galleryBanner": {
-    "color": "#1E1E2E",
+    "color": "#0D1117",
     "theme": "dark"
   },
 
@@ -56,10 +63,6 @@
   },
 
   "homepage": "https://github.com/ChristianUtria/PyPoints",
-
-  "bugs": {
-    "url": "https://github.com/ChristianUtria/PyPoints/issues"
-  },
 
   "contributes": {
     "viewsContainers": {
@@ -90,7 +93,7 @@
       { "command": "endpointCounter.copyRoute",      "title": "Copiar Route",               "icon": "$(copy)" },
       { "command": "endpointCounter.copyCurl",       "title": "Copiar cURL",                "icon": "$(terminal)" },
       { "command": "endpointCounter.peekCode",       "title": "Preview Code",               "icon": "$(open-preview)" },
-      { "command": "endpointCounter.runGetTest",     "title": "▶ Test GET",                 "icon": "$(play)" },
+      { "command": "endpointCounter.runGetTest",     "title": "Test API Endpoint",                 "icon": "$(play)" },
 
       { "command": "endpointCounter.search",         "title": "Buscar Endpoints",           "icon": "$(search)" },
       { "command": "endpointCounter.filterByMethod", "title": "Filtrar por HTTP Method",    "icon": "$(filter)" },
