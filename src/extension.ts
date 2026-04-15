@@ -380,7 +380,7 @@ function applyEditorDecorations(editor: vscode.TextEditor, endpoints: Endpoint[]
 // ─── WebView Panel ────────────────────────────────────────────────────────────
 
 function showEndpointPreviewPanel(ep: Endpoint, context: vscode.ExtensionContext, serverConfig?: ServerConfig): void {
-  const panel = vscode.window.createWebviewPanel('endpointPreview', `▶ ${ep.functionName}`, vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: true,enableFindWidget: true  });
+  const panel = vscode.window.createWebviewPanel('endpointPreview', `▶ ${ep.functionName}`, vscode.ViewColumn.Beside, { enableScripts: true, retainContextWhenHidden: true });
 
   const escapedCode = (ep.sourceCode ?? '# No disponible').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const methodBadgeColor: Record<string, string> = { GET: '#22c55e', POST: '#3b82f6', PUT: '#eab308', PATCH: '#f97316', DELETE: '#ef4444', HEAD: '#a855f7', OPTIONS: '#6b7280' };
