@@ -1,64 +1,114 @@
 {
   "name": "pypoints",
   "displayName": "PyPoints - Python API Tester & Endpoint Explorer",
-  "description": "Advanced Python API endpoint explorer for Flask, FastAPI and Django. Automatically scan, analyze and visualize routes, HTTP methods and API structure. Test endpoints in real time like a REST client, detect duplicates, validate routes and debug APIs directly inside Visual Studio Code.",
-  "version": "1.1.0",
+  "description": "Professional Python API explorer and project visualizer for Flask, FastAPI & Django. Map endpoints, test routes, instantly copy complex project structures, and visualize architecture with an interactive, centralized project tree.",
+  "version": "1.3.1",
+  "sponsor": {
+    "url": "https://github.com/sponsors/ChristianUtria"
+  },
   "publisher": "christian-dev",
   "license": "MIT",
-
   "keywords": [
-    "python", "api", "rest api", "api testing", "http client",
-    "endpoint testing", "endpoints", "flask", "fastapi", "django",
-    "route explorer", "api explorer", "http methods",
-    "get post put delete", "backend", "developer tools",
-    "code analysis", "api debugger", "vscode python",
-    "rest client", "api validation"
+    "python",
+    "api",
+    "rest api",
+    "flask",
+    "fastapi",
+    "django",
+    "endpoint testing",
+    "route explorer",
+    "project tree",
+    "structure visualization",
+    "copy structure",
+    "clipboard",
+    "quick copy",
+    "codelens",
+    "curl generator",
+    "api testing",
+    "productivity",
+    "backend tools",
+    "documentation",
+    "web development"
   ],
-
-  "engines": { "vscode": "^1.85.0" },
-
-  "categories": ["Programming Languages", "Debuggers", "Visualization", "Other"],
-
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Debuggers",
+    "Visualization",
+    "Other"
+  ],
   "icon": "media/logotipo_v4.png",
-
-  "galleryBanner": { "color": "#0D1117", "theme": "dark" },
-
+  "galleryBanner": {
+    "color": "#0D1117",
+    "theme": "dark"
+  },
   "qna": "marketplace",
-
   "activationEvents": [
+    "onCommand:endpointCounter.refresh",
+    "onCommand:pypoints.codeLensCopyCurl",
+    "onCommand:pypoints.codeLensCopyRoute",
+    "onCommand:pypoints.copyStructureFromContext",
+    "onCommand:pypoints.refreshCodeLens",
+    "onCommand:pypoints.showProjectTree",
+    "onCommand:pypoints.showStructure",
     "onView:endpointExplorer",
     "onView:endpointSummary",
-    "onView:pypointsStructure",
-    "onCommand:endpointCounter.refresh",
-    "onCommand:pypoints.showStructure",
-    "onCommand:pypoints.copyStructureFromContext",
-    "onCommand:pypoints.codeLensCopyRoute",
-    "onCommand:pypoints.codeLensCopyCurl",
-    "onCommand:pypoints.refreshCodeLens",
-    "onCommand:pypoints.showProjectTree"
+    "onView:pypointsMain",
+    "onView:pypointsStructure"
   ],
-
   "main": "./out/extension.js",
-
-  "repository": { "type": "git", "url": "https://github.com/ChristianUtria/PyPoints.git" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ChristianUtria/PyPoints.git"
+  },
   "homepage": "https://github.com/ChristianUtria/PyPoints",
-
   "contributes": {
-
     "viewsContainers": {
       "activitybar": [
-        { "id": "endpointCounter", "title": "PyPoints", "icon": "media/brujula.svg" }
+        {
+          "id": "endpointCounter",
+          "title": "PyPoints",
+          "icon": "media/brujula.svg"
+        },
+        {
+          "id": "pypointsExplorer",
+          "title": "PyPoints Explorer",
+          "icon": "media/estructura_icon.svg"
+        }
       ]
     },
-
     "views": {
       "endpointCounter": [
-        { "id": "endpointExplorer",  "name": "API Endpoints",    "icon": "media/brujula.svg", "contextualTitle": "PyPoints Explorer" },
-        { "id": "endpointSummary",   "name": "Resumen",           "visibility": "visible" },
-        { "id": "pypointsStructure", "name": "Project Structure", "type": "webview", "visibility": "visible" }
+        {
+          "id": "endpointExplorer",
+          "name": "Endpoints",
+          "icon": "media/brujula.svg",
+          "contextualTitle": "PyPoints Explorer",
+          "visibility": "visible"
+        },
+        {
+          "id": "endpointSummary",
+          "name": "Resumen",
+          "visibility": "collapsed"
+        }
+      ],
+      "pypointsExplorer": [
+        {
+          "id": "pypointsMain",
+          "name": "Files",
+          "type": "webview",
+          "visibility": "visible"
+        },
+        {
+          "id": "pypointsStructure",
+          "name": "Project Structure",
+          "type": "webview",
+          "visibility": "visible"
+        }
       ]
     },
-
     "configuration": {
       "title": "PyPoints",
       "properties": {
@@ -71,25 +121,84 @@
           "type": "boolean",
           "default": true,
           "description": "Mostrar CodeLens (Run | Test | Copy) sobre cada endpoint en el editor"
+        },
+        "pypoints.anthropicApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key de Anthropic para resumir archivos con Claude (botón ✨ IA en el panel Files).",
+          "markdownDescription": "Tu [API key de Anthropic](https://console.anthropic.com/settings/keys). Necesaria para el botón **✨ IA (Claude)** en el panel de archivos. Se guarda en tu configuración local de VS Code."
         }
       }
     },
-
     "commands": [
-      { "command": "endpointCounter.refresh",        "title": "Refrescar Endpoints",             "icon": "$(refresh)" },
-      { "command": "endpointCounter.scanWorkspace",  "title": "Escaner Workspace",               "icon": "$(sync)" },
-      { "command": "endpointCounter.copyRoute",      "title": "Copiar Route",                    "icon": "$(copy)" },
-      { "command": "endpointCounter.copyCurl",       "title": "Copiar cURL",                     "icon": "$(terminal)" },
-      { "command": "endpointCounter.peekCode",       "title": "Preview Code",                    "icon": "$(open-preview)" },
-      { "command": "endpointCounter.runGetTest",     "title": "Test API Endpoint",               "icon": "$(play)" },
-      { "command": "endpointCounter.search",         "title": "Buscar Endpoints",                "icon": "$(search)" },
-      { "command": "endpointCounter.filterByMethod", "title": "Filtrar por HTTP Method",         "icon": "$(filter)" },
-      { "command": "endpointCounter.showOnlyIssues", "title": "Mostrar solo problemas",          "icon": "$(error)" },
-      { "command": "endpointCounter.clearFilters",   "title": "Limpiar filtros",                 "icon": "$(clear-all)" },
-      { "command": "endpointCounter.exportJson",     "title": "Exportar en Json",                "icon": "$(export)" },
-      { "command": "endpointCounter.exportMarkdown", "title": "Exportar en Markdown",            "icon": "$(markdown)" },
-      { "command": "endpointCounter.groupByCategory","title": "Agrupar por categoria" },
-      { "command": "endpointCounter.groupByFile",    "title": "Agrupar por archivo" },
+      {
+        "command": "endpointCounter.refresh",
+        "title": "Refrescar Endpoints",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "endpointCounter.scanWorkspace",
+        "title": "Escaner Workspace",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "endpointCounter.copyRoute",
+        "title": "Copiar Route",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "endpointCounter.copyCurl",
+        "title": "Copiar cURL",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "endpointCounter.peekCode",
+        "title": "Preview Code",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "endpointCounter.runGetTest",
+        "title": "Test API Endpoint",
+        "icon": "$(play)"
+      },
+      {
+        "command": "endpointCounter.search",
+        "title": "Buscar Endpoints",
+        "icon": "$(search)"
+      },
+      {
+        "command": "endpointCounter.filterByMethod",
+        "title": "Filtrar por HTTP Method",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "endpointCounter.showOnlyIssues",
+        "title": "Mostrar solo problemas",
+        "icon": "$(error)"
+      },
+      {
+        "command": "endpointCounter.clearFilters",
+        "title": "Limpiar filtros",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "endpointCounter.exportJson",
+        "title": "Exportar en Json",
+        "icon": "$(export)"
+      },
+      {
+        "command": "endpointCounter.exportMarkdown",
+        "title": "Exportar en Markdown",
+        "icon": "$(markdown)"
+      },
+      {
+        "command": "endpointCounter.groupByCategory",
+        "title": "Agrupar por categoria"
+      },
+      {
+        "command": "endpointCounter.groupByFile",
+        "title": "Agrupar por archivo"
+      },
       {
         "command": "pypoints.showStructure",
         "title": "PyPoints: Ver estructura del proyecto",
@@ -117,9 +226,7 @@
         "icon": "$(type-hierarchy)"
       }
     ],
-
     "menus": {
-
       "explorer/title": [
         {
           "command": "pypoints.showStructure",
@@ -132,7 +239,6 @@
           "when": "workspaceFolderCount > 0"
         }
       ],
-
       "explorer/context": [
         {
           "command": "pypoints.copyStructureFromContext",
@@ -140,32 +246,97 @@
           "when": "workspaceFolderCount > 0"
         }
       ],
-
       "view/title": [
-        { "command": "endpointCounter.refresh",        "when": "view == endpointExplorer", "group": "navigation@1" },
-        { "command": "endpointCounter.scanWorkspace",  "when": "view == endpointExplorer", "group": "navigation@2" },
-        { "command": "endpointCounter.search",         "when": "view == endpointExplorer", "group": "navigation@3" },
-        { "command": "endpointCounter.filterByMethod", "when": "view == endpointExplorer", "group": "navigation@4" },
-        { "command": "endpointCounter.showOnlyIssues", "when": "view == endpointExplorer", "group": "navigation@5" },
-        { "command": "endpointCounter.clearFilters",   "when": "view == endpointExplorer", "group": "navigation@6" },
-        { "command": "endpointCounter.groupByCategory","when": "view == endpointExplorer", "group": "2_group@1" },
-        { "command": "endpointCounter.groupByFile",    "when": "view == endpointExplorer", "group": "2_group@2" },
-        { "command": "endpointCounter.exportJson",     "when": "view == endpointExplorer", "group": "3_export@1" },
-        { "command": "endpointCounter.exportMarkdown", "when": "view == endpointExplorer", "group": "3_export@2" },
-        { "command": "pypoints.showStructure",         "when": "view == pypointsStructure","group": "navigation" }
+        {
+          "command": "endpointCounter.refresh",
+          "when": "view == endpointExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "endpointCounter.scanWorkspace",
+          "when": "view == endpointExplorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "endpointCounter.search",
+          "when": "view == endpointExplorer",
+          "group": "navigation@3"
+        },
+        {
+          "command": "endpointCounter.filterByMethod",
+          "when": "view == endpointExplorer",
+          "group": "navigation@4"
+        },
+        {
+          "command": "endpointCounter.showOnlyIssues",
+          "when": "view == endpointExplorer",
+          "group": "navigation@5"
+        },
+        {
+          "command": "endpointCounter.clearFilters",
+          "when": "view == endpointExplorer",
+          "group": "navigation@6"
+        },
+        {
+          "command": "endpointCounter.groupByCategory",
+          "when": "view == endpointExplorer",
+          "group": "2_group@1"
+        },
+        {
+          "command": "endpointCounter.groupByFile",
+          "when": "view == endpointExplorer",
+          "group": "2_group@2"
+        },
+        {
+          "command": "endpointCounter.exportJson",
+          "when": "view == endpointExplorer",
+          "group": "3_export@1"
+        },
+        {
+          "command": "endpointCounter.exportMarkdown",
+          "when": "view == endpointExplorer",
+          "group": "3_export@2"
+        },
+        {
+          "command": "pypoints.showStructure",
+          "when": "view == pypointsStructure",
+          "group": "navigation"
+        }
       ],
-
       "view/item/context": [
-        { "command": "endpointCounter.goToLine",   "when": "view == endpointExplorer && viewItem =~ /endpoint/", "group": "navigation@1" },
-        { "command": "endpointCounter.peekCode",   "when": "view == endpointExplorer && viewItem =~ /endpoint/", "group": "navigation@2" },
-        { "command": "endpointCounter.runGetTest", "when": "view == endpointExplorer && viewItem =~ /endpoint/", "group": "navigation@3" },
-        { "command": "endpointCounter.copyRoute",  "when": "view == endpointExplorer && viewItem =~ /endpoint/", "group": "inline@1" },
-        { "command": "endpointCounter.copyCurl",   "when": "view == endpointExplorer && viewItem =~ /endpoint/", "group": "inline@2" },
-        { "command": "endpointCounter.runGetTest", "when": "view == endpointExplorer && viewItem =~ /endpoint/", "group": "inline@3" }
+        {
+          "command": "endpointCounter.goToLine",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint/",
+          "group": "navigation@1"
+        },
+        {
+          "command": "endpointCounter.peekCode",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint/",
+          "group": "navigation@2"
+        },
+        {
+          "command": "endpointCounter.runGetTest",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint/",
+          "group": "navigation@3"
+        },
+        {
+          "command": "endpointCounter.copyRoute",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint/",
+          "group": "inline@1"
+        },
+        {
+          "command": "endpointCounter.copyCurl",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint/",
+          "group": "inline@2"
+        },
+        {
+          "command": "endpointCounter.runGetTest",
+          "when": "view == endpointExplorer && viewItem =~ /endpoint/",
+          "group": "inline@3"
+        }
       ]
     }
   },
-
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
@@ -174,7 +345,6 @@
     "package": "vsce package",
     "publish": "vsce publish"
   },
-
   "devDependencies": {
     "@types/vscode": "^1.85.0",
     "@types/node": "^20.0.0",
