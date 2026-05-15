@@ -2,7 +2,7 @@
   "name": "pypoints",
   "displayName": "PyPoints - Python API Tester & Endpoint Explorer",
   "description": "Professional Python API explorer and project visualizer for Flask, FastAPI & Django. Map endpoints, test routes, instantly copy complex project structures, and visualize architecture with an interactive, centralized project tree.",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "sponsor": {
     "url": "https://github.com/sponsors/ChristianUtria"
   },
@@ -56,7 +56,8 @@
     "onView:endpointExplorer",
     "onView:endpointSummary",
     "onView:pypointsMain",
-    "onView:pypointsStructure"
+    "onView:pypointsStructure",
+    "onView:pypoints.treeView"
   ],
   "main": "./out/extension.js",
   "repository": {
@@ -79,7 +80,14 @@
         }
       ]
     },
-    "views": {
+    "views": {"explorer": [ 
+    {
+      "id": "pypointsStructure",
+      "name": "PyPoints: Project Structure",
+      "type": "webview",
+      "visibility": "visible"
+    }
+  ],
       "endpointCounter": [
         {
           "id": "endpointExplorer",
@@ -106,6 +114,12 @@
           "name": "Project Structure",
           "type": "webview",
           "visibility": "visible"
+        },
+        {
+          "id": "pypoints.treeView",
+          "name": "AI Context",
+          "type": "tree",
+          "visibility": "visible"
         }
       ]
     },
@@ -127,6 +141,23 @@
           "default": "",
           "description": "API key de Anthropic para resumir archivos con Claude (botón ✨ IA en el panel Files).",
           "markdownDescription": "Tu [API key de Anthropic](https://console.anthropic.com/settings/keys). Necesaria para el botón **✨ IA (Claude)** en el panel de archivos. Se guarda en tu configuración local de VS Code."
+        },
+        "pypoints.claudeApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Anthropic API key for the AI Context panel (Summarize with Claude, Optimize & Copy).",
+          "markdownDescription": "Tu [API key de Anthropic](https://console.anthropic.com/settings/keys) para el panel **AI Context** → botón *Summarize with Claude*. Si ya tienes `pypoints.anthropicApiKey` configurada, también funciona."
+        },
+        "pypoints.defaultProfile": {
+          "type": "string",
+          "enum": ["fast", "balanced", "ai_max"],
+          "default": "balanced",
+          "description": "Perfil de optimización por defecto para el panel AI Context.",
+          "enumDescriptions": [
+            "Fast: elimina comentarios, líneas vacías y espacios extra",
+            "Balanced: Fast + JSON compacto, detección de patrones, truncado",
+            "AI Max: Balanced + resumen de logs, compresión agresiva"
+          ]
         }
       }
     },
@@ -224,6 +255,105 @@
         "command": "pypoints.showProjectTree",
         "title": "PyPoints: 🌳 Ver árbol del proyecto",
         "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "pypoints.addFileToContext",
+        "title": "Add to PyPoints Context",
+        "category": "PyPoints",
+        "icon": "$(add)"
+      },
+      {
+        "command": "pypoints.removeFileFromContext",
+        "title": "Remove from Context",
+        "category": "PyPoints",
+        "icon": "$(remove)"
+      },
+      {
+        "command": "pypoints.clearSelection",
+        "title": "Clear Selection",
+        "category": "PyPoints",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "pypoints.copyFiles",
+        "title": "Copy Selected Files",
+        "category": "PyPoints",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "pypoints.optimizeAndCopy",
+        "title": "Optimize & Copy",
+        "category": "PyPoints",
+        "icon": "$(zap)"
+      },
+      {
+        "command": "pypoints.summarizeFiles",
+        "title": "Summarize with Claude",
+        "category": "PyPoints",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "pypoints.previewOptimization",
+        "title": "Preview Optimization",
+        "category": "PyPoints",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "pypoints.excludeFile",
+        "title": "Exclude from Context",
+        "category": "PyPoints",
+        "icon": "$(circle-slash)"
+      },
+      {
+        "command": "pypoints.includeFile",
+        "title": "Include in Context",
+        "category": "PyPoints",
+        "icon": "$(check)"
+      },
+      {
+        "command": "pypoints.clearExclusions",
+        "title": "Clear All Exclusions",
+        "category": "PyPoints"
+      },
+      {
+        "command": "pypoints.analyzeFile",
+        "title": "Analyze Token Usage",
+        "category": "PyPoints",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "pypoints.copyOptimized",
+        "title": "Copy Optimized",
+        "category": "PyPoints",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "pypoints.analyzeDependencies",
+        "title": "Analyze Dependencies",
+        "category": "PyPoints",
+        "icon": "$(references)"
+      },
+      {
+        "command": "pypoints.showTokenUsage",
+        "title": "Show Token Usage",
+        "category": "PyPoints",
+        "icon": "$(symbol-number)"
+      },
+      {
+        "command": "pypoints.selectProfile",
+        "title": "Select Optimization Profile",
+        "category": "PyPoints",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "pypoints.setProfile",
+        "title": "Set Optimization Profile",
+        "category": "PyPoints"
+      },
+      {
+        "command": "pypoints.openFile",
+        "title": "Open File",
+        "category": "PyPoints"
       }
     ],
     "menus": {
@@ -244,6 +374,11 @@
           "command": "pypoints.copyStructureFromContext",
           "group": "5_cutcopypaste@99",
           "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "pypoints.addFileToContext",
+          "group": "5_cutcopypaste@100",
+          "when": "!explorerResourceIsFolder"
         }
       ],
       "view/title": [
@@ -301,6 +436,21 @@
           "command": "pypoints.showStructure",
           "when": "view == pypointsStructure",
           "group": "navigation"
+        },
+        {
+          "command": "pypoints.optimizeAndCopy",
+          "when": "view == pypoints.treeView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "pypoints.clearSelection",
+          "when": "view == pypoints.treeView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "pypoints.selectProfile",
+          "when": "view == pypoints.treeView",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -333,6 +483,46 @@
           "command": "endpointCounter.runGetTest",
           "when": "view == endpointExplorer && viewItem =~ /endpoint/",
           "group": "inline@3"
+        },
+        {
+          "command": "pypoints.copyOptimized",
+          "when": "view == pypoints.treeView && viewItem == pypoints.fileItem",
+          "group": "pypoints@1"
+        },
+        {
+          "command": "pypoints.previewOptimization",
+          "when": "view == pypoints.treeView && viewItem == pypoints.fileItem",
+          "group": "pypoints@2"
+        },
+        {
+          "command": "pypoints.analyzeFile",
+          "when": "view == pypoints.treeView && viewItem == pypoints.fileItem",
+          "group": "pypoints@3"
+        },
+        {
+          "command": "pypoints.showTokenUsage",
+          "when": "view == pypoints.treeView && viewItem == pypoints.fileItem",
+          "group": "pypoints@4"
+        },
+        {
+          "command": "pypoints.excludeFile",
+          "when": "view == pypoints.treeView && viewItem == pypoints.fileItem",
+          "group": "pypoints@5"
+        },
+        {
+          "command": "pypoints.analyzeDependencies",
+          "when": "view == pypoints.treeView && viewItem == pypoints.fileItem",
+          "group": "pypoints@6"
+        },
+        {
+          "command": "pypoints.removeFileFromContext",
+          "when": "view == pypoints.treeView && viewItem == pypoints.fileItem",
+          "group": "pypoints_remove@1"
+        },
+        {
+          "command": "pypoints.includeFile",
+          "when": "view == pypoints.treeView && viewItem == pypoints.excludedItem",
+          "group": "pypoints@1"
         }
       ]
     }
