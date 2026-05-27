@@ -2,7 +2,7 @@
   "name": "pypoints",
   "displayName": "PyPoints - Python API Tester & Endpoint Explorer",
   "description": "Professional Python API explorer and project visualizer for Flask, FastAPI & Django. Map endpoints, test routes, instantly copy complex project structures, and visualize architecture with an interactive, centralized project tree.",
-  "version": "1.4.0",
+  "version": "1.5.1",
   "sponsor": {
     "url": "https://github.com/sponsors/ChristianUtria"
   },
