@@ -1,8 +1,8 @@
 {
-  "name": "pypoints-endpoints",
-  "displayName": "PyPoints Endpoints — Python API Explorer & Tester",
-  "description": "Professional Python API explorer for Flask, FastAPI & Django. Map endpoints, test routes, copy cURLs, and export your API documentation — all from VS Code.",
-  "version": "2.0.0",
+  "name": "pypoints",
+  "displayName": "PyPoints - Python API Tester & Endpoint Explorer",
+  "description": "Detect, test & manage REST API endpoints in Flask, FastAPI and Django. CodeLens overlays, cURL generator, route explorer, duplicate detection, JSON body editor, project tree visualizer, export to JSON/Markdown. The Postman alternative built into VS Code.",
+  "version": "2.0.1",
   "publisher": "christian-dev",
   "license": "MIT",
   "sponsor": {
@@ -17,13 +17,28 @@
     "django",
     "endpoint testing",
     "route explorer",
-    "codelens",
-    "curl generator",
     "api testing",
-    "productivity",
+    "http client",
+    "curl generator",
+    "codelens",
+    "postman alternative",
+    "swagger",
+    "openapi",
+    "route testing",
+    "api explorer",
     "backend tools",
-    "documentation",
-    "web development"
+    "project tree",
+    "structure visualization",
+    "copy structure",
+    "clipboard",
+    "productivity",
+    "web development",
+    "blueprint",
+    "router",
+    "decorator",
+    "uvicorn",
+    "gunicorn",
+    "rest client"
   ],
   "engines": {
     "vscode": "^1.85.0"
@@ -31,6 +46,8 @@
   "categories": [
     "Programming Languages",
     "Debuggers",
+    "Visualization",
+    "Linters",
     "Other"
   ],
   "icon": "media/logotipo_v4.png",
