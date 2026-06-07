@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "node16",               // Ajustado para sincronizarse con moduleResolution
+    "moduleResolution": "node16",
     "target": "ES2020",
     "outDir": "out",
     "lib": ["ES2020"],
     "sourceMap": true,
     "rootDir": "src",
     "strict": true,
+    "noImplicitAny": false,           // Mantiene tu flujo libre para seguir usando 'e'
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
