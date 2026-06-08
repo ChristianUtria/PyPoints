@@ -1,39 +1,41 @@
 # PyPoints — Python API Tester, REST Client & Endpoint Explorer for VS Code
 
-> **Aviso :** estamos trabajando para que pypoints maneje otros lenguajes de programacion y no solo python
+> **Aviso :** estamos trabajando para que PyPoints maneje otros lenguajes de programacion y no solo python
 
 ---
 
-## El mejor Python API Tester y REST Client para VS Code
+## El mejor Python API Tester y REST Client para VS Code — Flask, FastAPI y Django
 
-**PyPoints** es una extensión para Visual Studio Code que funciona como un **Python API tester, REST client y endpoint explorer todo en uno**. Escanea automáticamente proyectos Flask, FastAPI y Django, mapea cada ruta y permite enviar peticiones HTTP (GET, POST, PUT, DELETE, PATCH) directamente desde el editor — sin Postman, sin Insomnia, sin cambiar de ventana.
+**PyPoints** es una extensión para Visual Studio Code que funciona como un **Python API tester, REST client, endpoint explorer y analizador de variables de entorno todo en uno**. Escanea automáticamente proyectos Flask, FastAPI y Django, mapea cada ruta y permite enviar peticiones HTTP (GET, POST, PUT, DELETE, PATCH) directamente desde el editor — sin Postman, sin Insomnia, sin cambiar de ventana. Ahora también **lee y carga automáticamente las variables de tu archivo `.env`**, inyectándolas en tus peticiones HTTP sin configuración manual.
 
 > Compatible con **Flask**, **FastAPI** y **Django** desde el primer momento. Sin configuración adicional.
 
 ---
 
-## Por qué los desarrolladores Python eligen PyPoints sobre Postman
+## Por qué los desarrolladores Python eligen PyPoints sobre Postman y Thunder Client
 
 En proyectos backend reales, los endpoints están dispersos en múltiples archivos, lo que dificulta:
 
 - Entender la arquitectura completa de la API de un vistazo
 - Detectar errores de rutas antes de llegar a producción
-- Mantener consistencia entre rutas, métodos y handlers
+- Mantener consistencia entre rutas, métodos HTTP y handlers
 - Navegar rápidamente entre funcionalidades sin perder el foco
+- Gestionar variables de entorno entre staging, desarrollo y producción
 
-PyPoints resuelve todo esto con **análisis estático inteligente + testing REST integrado + historial permanente de peticiones** — todo dentro de VS Code.
+PyPoints resuelve todo esto con **análisis estático inteligente + testing REST integrado + carga automática de `.env` + historial permanente de peticiones** — todo dentro de VS Code.
 
 ---
 
-## Características clave — Python REST Client y API Explorer
+## Características clave — Python REST Client, API Explorer y .env Manager
 
 - **Escáner de Endpoints Inteligente** — Soporte nativo para decoradores de Flask, FastAPI y Django
 - **REST Client Integrado** — Configura Headers, Query Params y Body (JSON/Form) con interfaz gráfica
+- **Carga Automática de Variables `.env`** — Lee tu `.env` y expone cada variable como `{{NOMBRE}}` directamente en el cliente REST. Soporta `.env.local`, `.env.staging` y `.env.production` con selector de entorno
 - **Historial Permanente** — Tus pruebas de API persisten entre sesiones de VS Code
 - **Explorador Visual de Endpoints** — Vista jerárquica en el panel lateral de VS Code
 - **API Linter** — Detecta rutas duplicadas, código muerto, returns faltantes y malas prácticas
 - **Generador de Snippets cURL** — Copia comandos cURL listos para ejecutar con un clic
-- **Filtros Avanzados** — Busca por método, archivo, ruta o estado de la ruta
+- **Filtros Avanzados** — Busca por método HTTP, archivo, ruta o estado de la ruta
 - **Documentación Instantánea** — Exporta la arquitectura completa a JSON o Markdown
 
 ---
@@ -44,8 +46,9 @@ PyPoints resuelve todo esto con **análisis estático inteligente + testing REST
 
 Envía peticiones HTTP reales sin salir de VS Code. PyPoints reemplaza Postman e Insomnia para el desarrollo backend del día a día.
 
-- Configuración completa de peticiones: variables, headers, body JSON/Form
+- Configuración completa de peticiones: variables, headers, body JSON/Form, autenticación Bearer/Basic/API Key
 - Visualizador de respuesta: código de estado, Headers, Body, tiempo de respuesta
+- **Variables `.env` disponibles directamente:** usa `{{BASE_URL}}`, `{{API_KEY}}`, `{{AUTH_TOKEN}}` o cualquier variable de tu `.env` como si fuera nativo. Cambia entre entornos — desarrollo, staging, producción — con un selector integrado sin tocar una sola petición guardada
 - **Historial Permanente:** Las pruebas y respuestas se guardan entre sesiones. Cierra VS Code, vuelve mañana — tu trabajo estará exactamente donde lo dejaste.
 
 ---
@@ -141,11 +144,11 @@ Genera documentación lista para el equipo de forma instantánea.
 
 ## Frameworks soportados
 
-| Framework | Detección de decoradores | Testing REST | Linting |
-|-----------|--------------------------|--------------|---------|
-| **Flask** | `@app.route`, `@blueprint.route` | Si | Si |
-| **FastAPI** | `@app.get`, `@router.post`, etc. | Si | Si |
-| **Django** | `path()`, `re_path()`, `@api_view` | Si | Si |
+| Framework | Detección de decoradores | Testing REST | Linting | Variables `.env` |
+|-----------|--------------------------|--------------|---------|-----------------|
+| **Flask** | `@app.route`, `@blueprint.route` | Si | Si | Si |
+| **FastAPI** | `@app.get`, `@router.post`, etc. | Si | Si | Si |
+| **Django** | `path()`, `re_path()`, `@api_view` | Si | Si | Si |
 
 ---
 
@@ -155,9 +158,9 @@ Genera documentación lista para el equipo de forma instantánea.
 2. Haz clic en el icono de **PyPoints** en la barra de actividad
 3. Ejecuta **"Scan Workspace"** para detectar todas las rutas automáticamente
 4. Selecciona cualquier endpoint y haz clic en **Test Endpoint**
-5. Configura headers y body, y envía la petición
+5. Tus variables de `.env` ya estarán disponibles — configura headers y body, y envía la petición
 
-> No se necesita iniciar el servidor para descubrir rutas. No se necesitan herramientas externas para testear.
+> No se necesita iniciar el servidor para descubrir rutas. No se necesitan herramientas externas para testear. No se necesita configurar variables de entorno manualmente.
 
 ---
 
@@ -177,6 +180,7 @@ def get_users():
 | Ruta | `/users` |
 | Handler | `get_users` |
 | Complejidad | Simple (I) |
+| Variables `.env` disponibles | `{{BASE_URL}}`, `{{API_KEY}}`, `{{AUTH_TOKEN}}` |
 | Acciones | `[Test Endpoint]` · `[Copy cURL]` · `[Preview Code]` |
 
 ![Hover Preview](media/focus_mouse.png)
@@ -185,7 +189,8 @@ def get_users():
 
 ## Casos de uso
 
-- **Desarrollo activo** — Prueba rutas a medida que las construyes, sin cambiar de aplicación
+- **Desarrollo activo** — Prueba rutas a medida que las construyes, sin cambiar de aplicación. Tus variables de `.env` ya están cargadas, cero fricción
+- **Testing en múltiples entornos** — Cambia entre `.env.staging` y `.env.production` con un selector. Mismas peticiones, diferentes variables, sin reconfigurar nada
 - **Auditoría de APIs** — Revisa calidad y consistencia de APIs legacy en Flask o Django
 - **Onboarding de equipo** — Entiende la estructura completa de un proyecto nuevo en minutos
 - **Testing rápido** — Evita abrir Postman para un simple cambio en una respuesta JSON
@@ -199,11 +204,13 @@ def get_users():
 | Característica | PyPoints | Postman | Thunder Client | REST Client |
 |----------------|----------|---------|---------------|-------------|
 | Detección automática de rutas Python | Si | No | No | No |
+| Carga automática de variables `.env` | Si | Manual | Manual | Manual |
 | Linting estático de API | Si | No | No | No |
 | Detección de rutas duplicadas | Si | No | No | No |
 | Historial permanente en VS Code | Si | Si | Si | No |
 | Funciona sin iniciar el servidor | Si | No | No | No |
 | Soporte nativo Flask/FastAPI/Django | Si | No | No | No |
+| Clasificación de complejidad cognitiva | Si | No | No | No |
 
 ---
 

@@ -2,41 +2,53 @@ const { execSync } = require('child_process');
 const JavaScriptObfuscator = require('javascript-obfuscator');
 const fs = require('fs');
 
-console.log('Iniciando empaquetado con esbuild...');
+console.log('Compilando Previewhtml por separado (sin ofuscar)...');
 
-// Paso 1: bundle + minify con esbuild
-execSync('npx esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --minify --platform=node');
+// Paso 1: compilar Previewhtml.ts → JS legible aparte
+execSync('npx tsc src/webview/Previewhtml.ts --outDir out_preview --module commonjs --target es2020 --esModuleInterop --skipLibCheck');
+
+const previewCode = fs.readFileSync('out_preview/webview/Previewhtml.js', 'utf8');
+
+console.log('Iniciando empaquetado con esbuild (sin Previewhtml)...');
+
+// Paso 2: bundle todo el src EXCEPTO Previewhtml
+// Previewhtml ya está compilado; lo reemplazamos con un stub vacío temporal
+const previewSrcPath = 'src/webview/Previewhtml.ts';
+const previewBackup = fs.readFileSync(previewSrcPath, 'utf8');
+
+// Stub temporal: exporta las mismas funciones pero vacías (para que esbuild no falle)
+// AJUSTA los nombres de exports según tu archivo real
+const stub = `
+export function getPreviewHtml(...args: any[]): string { return '__PREVIEW_PLACEHOLDER__'; }
+export function getWebviewContent(...args: any[]): string { return '__PREVIEW_PLACEHOLDER__'; }
+`;
+fs.writeFileSync(previewSrcPath, stub);
+
+try {
+  execSync('npx esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --minify --platform=node');
+} finally {
+  // Restaurar Previewhtml.ts original siempre, aunque falle
+  fs.writeFileSync(previewSrcPath, previewBackup);
+}
 
 console.log('Esbuild completado. Iniciando ofuscación...');
 
-// Paso 2: ofuscar el resultado
+// Paso 3: ofuscar el bundle (que tiene stubs de Previewhtml)
 const code = fs.readFileSync('out/extension.js', 'utf8');
 const result = JavaScriptObfuscator.obfuscate(code, {
   compact: true,
-
-  // ── Control de flujo ──────────────────────────────────────────
   controlFlowFlattening: true,
-  controlFlowFlatteningThreshold: 0.4,  // Bajado de 0.6 → menos riesgo de stack overflow en Electron
-
-  // ── Código muerto ─────────────────────────────────────────────
+  controlFlowFlatteningThreshold: 0.4,
   deadCodeInjection: true,
-  deadCodeInjectionThreshold: 0.3,      // Bajado de 0.4 → bundle más liviano
-
-  // ── Protecciones desactivadas (rompen VS Code) ────────────────
+  deadCodeInjectionThreshold: 0.3,
   debugProtection: false,
   selfDefending: false,
-
-  // ── Consola ───────────────────────────────────────────────────
   disableConsoleOutput: true,
-
-  // ── Identificadores ───────────────────────────────────────────
   identifierNamesGenerator: 'hexadecimal',
-  renameGlobals: false,                 // NUNCA cambiar: rompe exports.activate
-  transformObjectKeys: false,           // NUNCA cambiar: rompe APIs de VS Code
-
-  // ── String Array (núcleo de la ofuscación) ────────────────────
+  renameGlobals: false,
+  transformObjectKeys: false,
   stringArray: true,
-  stringArrayEncoding: ['base64'],      // rc4 → base64: igual de opaco, sin bugs en Electron
+  stringArrayEncoding: ['base64'],
   stringArrayRotate: true,
   rotateStringArray: true,
   stringArrayShuffle: true,
@@ -44,16 +56,20 @@ const result = JavaScriptObfuscator.obfuscate(code, {
   stringArrayIndexShift: true,
   stringArrayCallsTransform: true,
   stringArrayCallsTransformThreshold: 0.75,
-  stringArrayWrappersCount: 5,          // Mantenido en 5
-  stringArrayWrappersType: 'function',  // Mantenido
-
-  // ── Split strings ─────────────────────────────────────────────
+  stringArrayWrappersCount: 5,
+  stringArrayWrappersType: 'function',
   splitStrings: true,
-  splitStringsChunkLength: 4,           // Bajado de 5 → más fragmentos, más ilegible
-
-  // ── Unicode ───────────────────────────────────────────────────
+  splitStringsChunkLength: 4,
   unicodeEscapeSequence: true,
 });
 
-fs.writeFileSync('out/extension.js', result.getObfuscatedCode());
-console.log('¡Build ofuscado completo y listo para producción!');
+// Paso 4: reinyectar el código real de Previewhtml (sin ofuscar)
+let finalCode = result.getObfuscatedCode();
+finalCode = finalCode.replace(
+  /"__PREVIEW_PLACEHOLDER__"/g,
+  // Envuelve el código real como IIFE que retorna el módulo
+  `(function(){ ${previewCode}; return module.exports; })()`
+);
+
+fs.writeFileSync('out/extension.js', finalCode);
+console.log('¡Build completo! Previewhtml sin ofuscar, resto ofuscado.');
