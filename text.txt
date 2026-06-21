@@ -1,0 +1,77 @@
+1.
+Pregunta 1
+¿Qué afirmaciones son ciertas?
+
+
+
+Es posible descargar un módulo del núcleo que esté siendo utilizado por una aplicación si utiliza la opción -f a rmmod o modprobe -r
+
+Es posible descargar un módulo del núcleo que está siendo utilizado por otro módulo si utiliza la opción -f a rmmod o modprobe -r
+
+Es imposible descargar un módulo del núcleo que está siendo utilizado por otro módulo
+
+Es imposible descargar un módulo del núcleo que está siendo utilizado por una aplicación.
+
+1 punto
+2.
+Pregunta 2
+La utilidad lsmod muestra para cada módulo cargado (seleccione todas las respuestas correctas):
+
+
+
+Qué usuario cargó el módulo
+
+Qué otros módulos lo utilizan
+
+Su tamaño en bytes
+
+Cuántos procesos dependen de él
+
+Cuando se cargó el módulo
+
+1 punto
+3.
+Pregunta 3
+Udev (seleccione todas las respuestas correctas):
+
+
+
+Significa Usuario Desviado
+
+Está diseñado para controlar qué usuarios pueden utilizar un determinado dispositivo
+
+Soportes para el dispositivo delusuario
+
+Carga y descarga controladores de dispositivos y otros módulos del núcleo según sea necesario 
+
+Es responsable de poblar el directorio /dev una vez que el sistema está en funcionamiento
+
+1 punto
+4.
+Pregunta 4
+¿Qué comando garantizará que el servicio httpd (Apache) se inicie al arrancar el sistema?
+
+
+
+sudo systemctl start httpd.service
+
+sudo systemctl enable httpd.service
+
+sudo systemctl status httpd.service
+
+sudo systemctl init httpd.service
+
+1 punto
+5.
+Pregunta 5
+¿Cómo podría asegurarse de que el servicio httpd (Apache) se reinicia si ya está en funcionamiento, digamos para absorber un archivo de configuración revisado (seleccione todas las respuestas correctas)?
+
+
+
+sudo systemctl stop httpd && sudo systemctl start httpd
+
+sudo systemctl restart httpd
+
+sudo restart httpd
+
+sudo killall httpd && sudo startall httpd
