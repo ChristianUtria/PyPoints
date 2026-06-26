@@ -2,7 +2,7 @@
   "name": "pypoints",
   "displayName": "PyPoints - Python API Tester & Endpoint Explorer",
   "description": "Detect, test & manage REST API endpoints in Flask, FastAPI and Django. CodeLens overlays, cURL generator, route explorer, duplicate detection, JSON body editor, project tree visualizer, export to JSON/Markdown. The Postman alternative built into VS Code.",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "publisher": "christian-dev",
   "license": "MIT",
   "sponsor": {
